@@ -18,32 +18,47 @@ needs config file contiaining usernames and api keys in the following format:
 	ACCESS_KEY	<key>
 	ACCESS_SECRET	<secret>
 '''
+b_prefix = ""
+g_prefix = ""
 
 def main():
     parser = argparse.ArgumentParser()
     reqd = parser.add_argument_group('required arguments')
     reqd.add_argument('-c','--config',action='store',dest='con',help='Path to config file',required=True)
-    reqd.add_argument('-v', '--victim',action='store',dest='vic',help='Username to torment',required=True)
+    reqd.add_argument('-v', '--victim',action='store',dest='vic',help='Path to username file',required=True)
     args = parser.parse_args()
-
-    keys = get_keys(args.con)
+    
+    global b_prefix
+    global g_prefix
     
     try:
-        run(get_twitter_api(keys), args.vic)
+        import colorama
+        from colorama import Fore, Style
+        b_prefix = "["+Fore.RED+" FAIL "+Style.RESET_ALL+"] "
+        g_prefix = "["+Fore.GREEN+"  OK  "+Style.RESET_ALL+"] "
+    except ImportError:
+        b_prefix = "[ FAIL ] "
+        g_prefix = "[  OK  ] "
+        
+    keys = _get_keys(args.con)
+    
+    try:
+        _run(_get_twitter_api(keys), _get_victims(args.vic))
     except tweepy.TweepError as e:
-        print(str(e))
         if e.api_code == 88: # rate limited
-            print("Rate limited")
+            print(b_prefix+"[Rate limited] "+str(e))
         elif e.api_code == 64: # bot account suspended
-            print("Suspended")
+            print(b_prefix+"[Suspended] "+str(e))
         elif e.api_code == 136: # bot account is blocked from responding to the victim
-            print("Blocked")
+            print(b_prefix+"[Blocked] "+str(e))
+        else:
+            print(b_prefix+"[Error] "+str(e))
     except KeyboardInterrupt:
-        print("Killed")
+        print(g_prefix+"User interrupt")
             
     sys.exit(0)
 
-def run(apis, victim):
+def _run(apis, victim):
     '''
     Run the campaign
 
@@ -53,33 +68,99 @@ def run(apis, victim):
     It was worth a shot though
 
     @param list twitter apis
+    @param list victims
     @return none
     '''
+    global b_prefix
+    global g_prefix
+    
     tweet_ids = []
+    tweet_text = []
+    tweet_media = []
+    
     for api in apis:
-        #print("here")
-        if not api.verify_credentials():
-            print("ERROR: Twitter AUTH failure for: "+api.get_user(screen_name))
-            raise tweepy.TweepError
-        print("@"+api.me().screen_name+" authenticated and connected")
 
-    spotter = apis[0]
-    stalker = apis[1]
-    i = 0
+        if not api.verify_credentials():
+            print(b_prefix+"ERROR: Twitter AUTH failure for: "+api.get_user(screen_name))
+            raise tweepy.TweepError
+        print(g_prefix+"@"+api.me().screen_name+" authenticated and connected")
+        res = input(g_prefix+"Give me the path to "+api.me().screen_name+" wordlist: ")
+        tweet_text.append((api.me.screen_name, _get_tweet_text(res))) # Get tweet text for replies
+        res = input(g_prefix+"Give me the path to "+api.me().screen_name+" media files, or <ENTER> for none: ")
+        if res is not None:
+            tweet_media.append((api.me.screen_name, _get_media_files(res))) # Get media files for replies
+        
     while True:
-        # check vicitm's timeline for latest tweet
         for tweet in spotter.user_timeline(screen_name=victim, count=1):
             # check that latest tweet is < 5 min old and hasn't already been responded to
             if (time.time() - (tweet.created_at - datetime.datetime(1970,1,1)).total_seconds() < 300) and (tweet.id not in tweet_ids):
                 tweet_ids.append(tweet.id)
-                # str(i) is concatenated to the string to prevent twitter's duplicate status checks
+
                 stalker.update_status('@'+victim+ ' sup '+str(i), in_reply_to_status=tweet.id) # have stalker reply to tweet found by spotter
-                # api.update_with_media('victims/media/113047940.jpg','@' + victim_list[current_user]+' pls clap', in_reply_to_status_id = tweet.id)
+                
                 i += 1
                 print("Responded to "+victim)
             time.sleep(5)
+
+def _get_tweet_text(fp):
+    '''
+    Get text file of tweet text
+
+    @param file path
+    @return list of tweet text
+    '''
+    text = []
+    with open(fp,'r') as twt:
+        text = twt.readlines()
+    return text
+
+def _get_media_files(fp):
+    '''
+    Get media files from a directory
+
+    @param file path
+    @return list of media files
+    '''
+    files = []
+    for file in os.listdir(fp):
+        files.append(os.path.join(fp,file))
+
+    return files
+
+def _update_no_media(tweeter, tweet, say_this):
+    '''
+    Update twitter stat with text only
+
+    @param api of user sending the tweet
+    @param api of user receiving tweet
+    @param string of what to tweet
+    '''
+    tweeter.update_status('@'+tweet.screen_name+' '+say_this, in_reply_to_status=tweet.id)
+
+def _update_w_media(tweeter, tweet, say_this, with_this):
+    '''
+    Update twitter stat with text and media
+
+    @param api of user sending the tweet
+    @param api of user receiving tweet
+    @param string of what to say
+    @param string file path to media
+    '''
+    tweeter.update_with_media(with_this,'@'+tweet.screen_name+' '+say_this, in_reply_to_status_id = tweet.id)
+
+def _get_victims(fp):
+    '''
+    Get list of users to torment
+
+    @param string file path
+    @return list users
+    '''
+    torment = []
+    with open(fp,'r') as in_file:
+        torment = in_file.readlines()
+    return torment
     
-def get_keys(fp):
+def _get_keys(fp):
     '''
     Get user api keys from config file
 
@@ -102,7 +183,7 @@ def get_keys(fp):
 
     return user_keys
 
-def get_twitter_api(api_keys):
+def _get_twitter_api(api_keys):
     '''
     Returns a list of authenticated twitter apis
 
