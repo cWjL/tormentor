@@ -3,6 +3,7 @@
 
 import tweepy, time, sys, datetime, os, re
 import argparse, traceback, time, datetime
+import threading import Thread
 '''
 Simple twitter bot script
 
@@ -43,7 +44,14 @@ def main():
     keys = _get_keys(args.con)
     
     try:
-        _run(_get_twitter_api(keys), _get_victims(args.vic))
+        thread_list = _get_threads(_get_twitter_api(keys), _get_victims(args.vic))
+        print(g_prefix+"Starting bot threads")
+        for bot in thread_list:
+            bot.start()
+        print(g_prefix+"Bots running")
+        for bot in thread_list:
+            bot.join()
+        print(g_prefix+"Bots done")
     except tweepy.TweepError as e:
         if e.api_code == 88: # rate limited
             print(b_prefix+"[Rate limited] "+str(e))
@@ -55,10 +63,12 @@ def main():
             print(b_prefix+"[Error] "+str(e))
     except KeyboardInterrupt:
         print(g_prefix+"User interrupt")
+    except Exception as e:
+        print(b_prefix+"Error: "+str(e))
             
     sys.exit(0)
 
-def _run(apis, victim):
+def _get_threads(apis, victim):
     '''
     Run the campaign
 
@@ -77,6 +87,7 @@ def _run(apis, victim):
     tweet_ids = []
     tweet_text = []
     tweet_media = []
+    bot_threads = []
     
     for api in apis:
 
@@ -85,22 +96,30 @@ def _run(apis, victim):
             raise tweepy.TweepError
         print(g_prefix+"@"+api.me().screen_name+" authenticated and connected")
         res = input(g_prefix+"Give me the path to "+api.me().screen_name+" wordlist: ")
+        res = None
         tweet_text.append((api.me.screen_name, _get_tweet_text(res))) # Get tweet text for replies
         res = input(g_prefix+"Give me the path to "+api.me().screen_name+" media files, or <ENTER> for none: ")
         if res is not None:
             tweet_media.append((api.me.screen_name, _get_media_files(res))) # Get media files for replies
-        
-    while True:
-        for tweet in spotter.user_timeline(screen_name=victim, count=1):
-            # check that latest tweet is < 5 min old and hasn't already been responded to
-            if (time.time() - (tweet.created_at - datetime.datetime(1970,1,1)).total_seconds() < 300) and (tweet.id not in tweet_ids):
-                tweet_ids.append(tweet.id)
 
-                stalker.update_status('@'+victim+ ' sup '+str(i), in_reply_to_status=tweet.id) # have stalker reply to tweet found by spotter
+    for api in apis: # Select victim and set up threads
+        i = 0
+        who = True
+        for vic in victim:
+            print("\t["+str(i)+"] "+vic)
+            i += 1
+
+        while who:
+            res = input(g_prefix+"Who should "+api.me().screen_name+" torment?")
+            if int(res) > 0 and int(res) < (len(victim)-1):
+                who = False
+            else:
+                print(b_prefix+"Incorrect selection")
                 
-                i += 1
-                print("Responded to "+victim)
-            time.sleep(5)
+        bot = Soldier(api, tweet_media, tweet_text, victim[int(res)])
+        bot.daemon = True
+        bot_threads.append(bot)
+    return bot_threads
 
 def _get_tweet_text(fp):
     '''
@@ -201,6 +220,24 @@ def _get_twitter_api(api_keys):
         tweepy_apis.append(tweepy.API(auth))
 
     return tweepy_apis
+
+class Soldier(Thread):
+    '''
+    Bot thread
+    '''
+    ####################################################################################################
+    ## Not finished.  Write bot behaviour                                                             ##
+    ####################################################################################################
+    def __init__(self, twatter_api, media, text, victim):
+        Thread.__init__(self)
+        self.twatter_api = twatter_api
+        self.media_list = media
+        self.text_list = text
+        self.victim = victim
+
+    def run(self):
+        while True:
+            tmp = "do stuff"
 
 
 if __name__ == "__main__":
