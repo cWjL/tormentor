@@ -1,9 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import tweepy, time, sys, datetime, os, re
 import argparse, traceback, time, datetime
-import threading import Thread
+from threading import Thread
+import traceback
 '''
 Simple twitter bot script
 
@@ -62,9 +63,10 @@ def main():
         else:
             print(b_prefix+"[Error] "+str(e))
     except KeyboardInterrupt:
-        print(g_prefix+"User interrupt")
+        print('\n'+g_prefix+"User interrupt")
     except Exception as e:
         print(b_prefix+"Error: "+str(e))
+        traceback.print_exc()
             
     sys.exit(0)
 
@@ -88,35 +90,37 @@ def _get_threads(apis, victim):
     tweet_text = []
     tweet_media = []
     bot_threads = []
-    
+    res = ""
     for api in apis:
 
         if not api.verify_credentials():
             print(b_prefix+"ERROR: Twitter AUTH failure for: "+api.get_user(screen_name))
             raise tweepy.TweepError
         print(g_prefix+"@"+api.me().screen_name+" authenticated and connected")
-        res = input(g_prefix+"Give me the path to "+api.me().screen_name+" wordlist: ")
-        res = None
-        tweet_text.append((api.me.screen_name, _get_tweet_text(res))) # Get tweet text for replies
+        res = input(g_prefix+'Give me the path to '+api.me().screen_name+' wordlist: ')
+        tweet_text.append((api.me().screen_name, _get_tweet_text(res))) # Get tweet text for replies
+        res = ""
         res = input(g_prefix+"Give me the path to "+api.me().screen_name+" media files, or <ENTER> for none: ")
-        if res is not None:
-            tweet_media.append((api.me.screen_name, _get_media_files(res))) # Get media files for replies
+        if res != "":
+            tweet_media.append((api.me().screen_name, _get_media_files(res))) # Get media files for replies
+        else:
+            tweet_media = None
 
     for api in apis: # Select victim and set up threads
         i = 0
         who = True
+        print('\n')
         for vic in victim:
             print("\t["+str(i)+"] "+vic)
             i += 1
 
         while who:
-            res = input(g_prefix+"Who should "+api.me().screen_name+" torment?")
-            if int(res) > 0 and int(res) < (len(victim)-1):
+            res = input(g_prefix+"Who should "+api.me().screen_name+" torment? ")
+            if int(res) >= 0 and int(res) < len(victim):
                 who = False
             else:
                 print(b_prefix+"Incorrect selection")
-                
-        bot = Soldier(api, tweet_media, tweet_text, victim[int(res)])
+        bot = Soldier(api, tweet_text, victim[int(res)], tweet_media)
         bot.daemon = True
         bot_threads.append(bot)
     return bot_threads
@@ -129,7 +133,7 @@ def _get_tweet_text(fp):
     @return list of tweet text
     '''
     text = []
-    with open(fp,'r') as twt:
+    with open(os.path.abspath(fp),'r') as twt:
         text = twt.readlines()
     return text
 
@@ -145,27 +149,6 @@ def _get_media_files(fp):
         files.append(os.path.join(fp,file))
 
     return files
-
-def _update_no_media(tweeter, tweet, say_this):
-    '''
-    Update twitter stat with text only
-
-    @param api of user sending the tweet
-    @param api of user receiving tweet
-    @param string of what to tweet
-    '''
-    tweeter.update_status('@'+tweet.screen_name+' '+say_this, in_reply_to_status=tweet.id)
-
-def _update_w_media(tweeter, tweet, say_this, with_this):
-    '''
-    Update twitter stat with text and media
-
-    @param api of user sending the tweet
-    @param api of user receiving tweet
-    @param string of what to say
-    @param string file path to media
-    '''
-    tweeter.update_with_media(with_this,'@'+tweet.screen_name+' '+say_this, in_reply_to_status_id = tweet.id)
 
 def _get_victims(fp):
     '''
@@ -225,19 +208,50 @@ class Soldier(Thread):
     '''
     Bot thread
     '''
-    ####################################################################################################
-    ## Not finished.  Write bot behaviour                                                             ##
-    ####################################################################################################
-    def __init__(self, twatter_api, media, text, victim):
+    def __init__(self, twatter_api, text, victim, media=None):
         Thread.__init__(self)
         self.twatter_api = twatter_api
         self.media_list = media
         self.text_list = text
         self.victim = victim
+        self.tweet_ids = []
 
     def run(self):
         while True:
-            tmp = "do stuff"
+            for tweet in self.twatter_api.user_timeline(screen_name=self.victim, count=1):
+                if ((time.time() - (tweet.created_at - datetime.datetime(1970,1,1)).total_seconds() < 300) and
+                    (tweet.id not in self.tweet_ids)):
+                    self.tweet_ids.append(tweet.id)
+                    try:
+                        if self.media_list is not None:
+                            self._update_w_media(self.twatter_api, tweet, self.text_list.pop(0), self.media_list.pop(0))
+                        else:
+                            self._update_no_media(self.twatter_api, tweet, self.text_list.pop(0))
+                    except IndexError:
+                        break
+                    except Exception:
+                        break
+
+    def _update_no_media(self, tweeter, tweet, say_this):
+        '''
+        Update twitter stat with text only
+        
+        @param api of user sending the tweet
+        @param api of user receiving tweet
+        @param string of what to tweet
+        '''
+        tweeter.update_status('@'+self.victim+' '+say_this, in_reply_to_status=tweet.id)
+
+    def _update_w_media(self, tweeter, tweet, say_this, with_this):
+        '''
+        Update twitter stat with text and media
+        
+        @param api of user sending the tweet
+        @param api of user receiving tweet
+        @param string of what to say
+        @param string file path to media
+        '''
+        tweeter.update_with_media(with_this,'@'+self.victim+' '+say_this, in_reply_to_status_id = tweet.id)
 
 
 if __name__ == "__main__":
