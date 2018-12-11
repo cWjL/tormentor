@@ -49,16 +49,11 @@ def main():
 
 def _get_threads(apis, victim):
     '''
-    Run the campaign
-
-    Doesn't work as intended. If user is blocked, the bot is able to tweet in reply to any status update by
-    the victim, but the tweets cannot be seen by anyone
-
-    It was worth a shot though
+    Instantiate and return a list of bot objects
 
     @param list twitter apis
     @param list victims
-    @return none
+    @return list of Soldier objects
     '''
     global b_prefix
     global g_prefix
