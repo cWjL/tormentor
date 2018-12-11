@@ -4,21 +4,8 @@
 import tweepy, time, sys, datetime, os, re
 import argparse, traceback, time, datetime
 from threading import Thread
-import traceback
 '''
-Simple twitter bot script
-
-needs config file contiaining usernames and api keys in the following format:
-	@<user_1>
-	CONSUMER_KEY	<key>
-	CONSUMER_SECRET	<secret>
-	ACCESS_KEY	<key>
-	ACCESS_SECRET	<secret>
-	@<user_2>
-	CONSUMER_KEY	<key>
-	CONSUMER_SECRET	<secret>
-	ACCESS_KEY	<key>
-	ACCESS_SECRET	<secret>
+Simple twitter bot
 '''
 b_prefix = ""
 g_prefix = ""
@@ -53,20 +40,10 @@ def main():
         for bot in thread_list:
             bot.join()
         print(g_prefix+"Bots done")
-    except tweepy.TweepError as e:
-        if e.api_code == 88: # rate limited
-            print(b_prefix+"[Rate limited] "+str(e))
-        elif e.api_code == 64: # bot account suspended
-            print(b_prefix+"[Suspended] "+str(e))
-        elif e.api_code == 136: # bot account is blocked from responding to the victim
-            print(b_prefix+"[Blocked] "+str(e))
-        else:
-            print(b_prefix+"[Error] "+str(e))
     except KeyboardInterrupt:
         print('\n'+g_prefix+"User interrupt")
     except Exception as e:
         print(b_prefix+"Error: "+str(e))
-        traceback.print_exc()
             
     sys.exit(0)
 
@@ -96,9 +73,12 @@ def _get_threads(apis, victim):
         if not api.verify_credentials():
             print(b_prefix+"ERROR: Twitter AUTH failure for: "+api.get_user(screen_name))
             raise tweepy.TweepError
+        
         print(g_prefix+"@"+api.me().screen_name+" authenticated and connected")
+        
         res = input(g_prefix+'Give me the path to '+api.me().screen_name+' wordlist: ')
         tweet_text.append((api.me().screen_name, _get_tweet_text(res))) # Get tweet text for replies
+        
         res = ""
         res = input(g_prefix+"Give me the path to "+api.me().screen_name+" media files, or <ENTER> for none: ")
         if res != "":
@@ -106,21 +86,30 @@ def _get_threads(apis, victim):
         else:
             tweet_media = None
 
-    for api in apis: # Select victim and set up threads
+    for api in apis:
         i = 0
         who = True
-        print('\n')
+        print(g_prefix+"Select from list:")
         for vic in victim:
             print("\t["+str(i)+"] "+vic)
             i += 1
-
+        # Select the victim
         while who:
             res = input(g_prefix+"Who should "+api.me().screen_name+" torment? ")
             if int(res) >= 0 and int(res) < len(victim):
                 who = False
             else:
                 print(b_prefix+"Incorrect selection")
-        bot = Soldier(api, tweet_text, victim[int(res)], tweet_media)
+        # Get instantiated bots
+        for texts in tweet_text:
+            if texts[0] == api.me().screen_name:
+                if tweet_media is not None:
+                    for media in tweet_media:
+                        if media[0] == api.me().screen_name:
+                            bot = Soldier(api, texts[1], victim[int(res)], media[1])
+                else:
+                    bot = Soldier(api, texts[1], victim[int(res)], tweet_media)
+
         bot.daemon = True
         bot_threads.append(bot)
     return bot_threads
@@ -134,7 +123,8 @@ def _get_tweet_text(fp):
     '''
     text = []
     with open(os.path.abspath(fp),'r') as twt:
-        text = twt.readlines()
+        text = (line.rstrip() for line in twt)
+        text = list(line for line in text if line)
     return text
 
 def _get_media_files(fp):
@@ -207,9 +197,15 @@ def _get_twitter_api(api_keys):
 class Soldier(Thread):
     '''
     Bot thread
-    '''
+
+    @param twitter api
+    @param list of text to tweet
+    @param string username to tweet to
+    @param list of media file paths
+    '''    
     def __init__(self, twatter_api, text, victim, media=None):
         Thread.__init__(self)
+        global b_prefix
         self.twatter_api = twatter_api
         self.media_list = media
         self.text_list = text
@@ -217,42 +213,43 @@ class Soldier(Thread):
         self.tweet_ids = []
 
     def run(self):
+        '''
+        Bot worker thread function
+
+        @param none
+        @return on Tweepy error
+        @return on IndexError
+        '''
+        if self.media_list is None:
+            self.media_list = []
         while True:
             for tweet in self.twatter_api.user_timeline(screen_name=self.victim, count=1):
+                # Find latest tweet that is less than five minutes old
                 if ((time.time() - (tweet.created_at - datetime.datetime(1970,1,1)).total_seconds() < 300) and
                     (tweet.id not in self.tweet_ids)):
                     self.tweet_ids.append(tweet.id)
                     try:
-                        if self.media_list is not None:
-                            self._update_w_media(self.twatter_api, tweet, self.text_list.pop(0), self.media_list.pop(0))
+                        if len(self.media_list) > 0: # Reply with media if there it exists
+                            self.twatter_api.update_with_media(self.media_list.pop(0),'@'+self.victim+' '+
+                                                               self.text_list.pop(0), in_reply_to_status_id=tweet.id)
+                        else: # Otherwise reply with text only
+                            self.twatter_api.update_status('@'+self.victim+' '+
+                                                           self.text_list.pop(0), in_reply_to_status_id=tweet.id)
+                    except tweepy.TweepError as e: # Catch error and return
+                        if e.api_code == 88:
+                            print(b_prefix+self.twatter_api.me().screen_name+" [Rate limited] "+str(e))
+                        elif e.api_code == 64:
+                            print(b_prefix+self.twatter_api.me().screen_name+" [Suspended] "+str(e))
+                        elif e.api_code == 136:
+                            print(b_prefix+self.twatter_api.me().screen_name+" [Blocked] "+str(e))
                         else:
-                            self._update_no_media(self.twatter_api, tweet, self.text_list.pop(0))
+                            print(b_prefix+self.twatter_api.me().screen_name+" [Other] "+str(e))
+                        return
                     except IndexError:
-                        break
-                    except Exception:
-                        break
+                        print(b_prefix+self.twatter_api.me().screen_name+" is out of text to tweet")
+                        return
 
-    def _update_no_media(self, tweeter, tweet, say_this):
-        '''
-        Update twitter stat with text only
-        
-        @param api of user sending the tweet
-        @param api of user receiving tweet
-        @param string of what to tweet
-        '''
-        tweeter.update_status('@'+self.victim+' '+say_this, in_reply_to_status=tweet.id)
-
-    def _update_w_media(self, tweeter, tweet, say_this, with_this):
-        '''
-        Update twitter stat with text and media
-        
-        @param api of user sending the tweet
-        @param api of user receiving tweet
-        @param string of what to say
-        @param string file path to media
-        '''
-        tweeter.update_with_media(with_this,'@'+self.victim+' '+say_this, in_reply_to_status_id = tweet.id)
-
+            time.sleep(2)
 
 if __name__ == "__main__":
     main()
