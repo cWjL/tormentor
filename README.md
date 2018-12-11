@@ -14,7 +14,8 @@ Simple multithreaded python Twitter bot.  Uses configuration file passed at runt
 	ACCESS_SECRET	<secret>
 ```
 With `<key>` and `<secret>` being the API keys obtained from Twitter, in string format.  The `CONSUMER_KEY` and `<key>` must be tab separated.<br />
-The bot target (user to respond to) must be passed at runtime using the `-v` or `--victim` flags.<br />
+
+The bot targets (users to respond to) must be passed at runtime using the `-v` or `--victim` flags and must be a list of string usernames.<br />
 
 **Required Packages**
 
@@ -25,9 +26,9 @@ pip install tweepy
 
 **Optional Packages**
 
-&nbsp;&nbsp;tweepy
+&nbsp;&nbsp;colorama
 ```
-pip install tweepy
+pip install colorama
 ```
 
 **Usage**
