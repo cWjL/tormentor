@@ -3,6 +3,7 @@
 
 import tweepy, time, sys, datetime, os, re
 import argparse, traceback, time, datetime
+import logging
 from threading import Thread
 '''
 Simple twitter bot
@@ -16,6 +17,10 @@ def main():
     reqd.add_argument('-c','--config',action='store',dest='con',help='Path to config file',required=True)
     reqd.add_argument('-v', '--victim',action='store',dest='vic',help='Path to username file',required=True)
     args = parser.parse_args()
+
+    log = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)-8s %(message)s',
+                        datefmt='%a, %d %b %Y %H:%M:%S', filename='logs/torment.log', filemode='w')
     
     global b_prefix
     global g_prefix
@@ -32,7 +37,7 @@ def main():
     keys = _get_keys(args.con)
     
     try:
-        thread_list = _get_threads(_get_twitter_api(keys), _get_victims(args.vic))
+        thread_list = _get_threads(_get_twitter_api(keys), _get_victims(args.vic), log)
         print(g_prefix+"Starting bot threads")
         for bot in thread_list:
             bot.start()
@@ -47,7 +52,7 @@ def main():
             
     sys.exit(0)
 
-def _get_threads(apis, victim):
+def _get_threads(apis, victim, log):
     '''
     Instantiate and return a list of bot objects
 
@@ -101,9 +106,9 @@ def _get_threads(apis, victim):
                 if tweet_media is not None:
                     for media in tweet_media:
                         if media[0] == api.me().screen_name:
-                            bot = Soldier(api, texts[1], victim[int(res)], media[1])
+                            bot = Soldier(api, texts[1], victim[int(res)], log, media[1])
                 else:
-                    bot = Soldier(api, texts[1], victim[int(res)], tweet_media)
+                    bot = Soldier(api, texts[1], victim[int(res)], log, tweet_media)
 
         bot.daemon = True
         bot_threads.append(bot)
@@ -198,7 +203,7 @@ class Soldier(Thread):
     @param string username to tweet to
     @param list of media file paths
     '''    
-    def __init__(self, twatter_api, text, victim, media=None):
+    def __init__(self, twatter_api, text, victim, log, media=None):
         Thread.__init__(self)
         global b_prefix
         self.twatter_api = twatter_api
@@ -206,6 +211,7 @@ class Soldier(Thread):
         self.text_list = text
         self.victim = victim
         self.tweet_ids = []
+        self.log = log
 
     def run(self):
         '''
@@ -224,12 +230,16 @@ class Soldier(Thread):
                     (tweet.id not in self.tweet_ids)):
                     self.tweet_ids.append(tweet.id)
                     try:
+                        reply = self.text_list.pop(0)
+                        media = ""
                         if len(self.media_list) > 0: # Reply with media if there it exists
-                            self.twatter_api.update_with_media(self.media_list.pop(0),'@'+self.victim+' '+
-                                                               self.text_list.pop(0), in_reply_to_status_id=tweet.id)
+                            media = self.media_list.pop(0)
+                            self.twatter_api.update_with_media(media,'@'+self.victim+' '+
+                                                               reply, in_reply_to_status_id=tweet.id)
                         else: # Otherwise reply with text only
                             self.twatter_api.update_status('@'+self.victim+' '+
-                                                           self.text_list.pop(0), in_reply_to_status_id=tweet.id)
+                                                           reply, in_reply_to_status_id=tweet.id)
+                        self.log.info("Reply: "+reply+" sent to @"+self.victim+" With file: "+media)
                     except tweepy.TweepError as e: # Catch error and return
                         if e.api_code == 88:
                             print(b_prefix+self.twatter_api.me().screen_name+" [Rate limited] "+str(e))
@@ -239,12 +249,16 @@ class Soldier(Thread):
                             print(b_prefix+self.twatter_api.me().screen_name+" [Blocked] "+str(e))
                         else:
                             print(b_prefix+self.twatter_api.me().screen_name+" [Other] "+str(e))
+                        self.log.info("Twitter Error: "+str(e))
                         return
                     except IndexError:
                         print(b_prefix+self.twatter_api.me().screen_name+" is out of text to tweet")
+                        self.log.info("Wordlist empty")
                         return
 
             time.sleep(2)
 
 if __name__ == "__main__":
+    if not os.path.exists("logs"):
+        os.mkdirs("logs")
     main()
