@@ -19,7 +19,7 @@ def main():
     args = parser.parse_args()
 
     log = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)-8s %(message)s',
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s',
                         datefmt='%a, %d %b %Y %H:%M:%S', filename='logs/torment.log', filemode='w')
     
     global b_prefix
@@ -221,6 +221,7 @@ class Soldier(Thread):
         @return on Tweepy error
         @return on IndexError
         '''
+        self.log.info(self.twatter_api.me().screen_name+" thread started")
         if self.media_list is None:
             self.media_list = []
         while True:
@@ -260,5 +261,5 @@ class Soldier(Thread):
 
 if __name__ == "__main__":
     if not os.path.exists("logs"):
-        os.mkdirs("logs")
+        os.makedirs("logs")
     main()
