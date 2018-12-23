@@ -33,10 +33,11 @@ pip install colorama
 
 **Usage**
 ```
-usage: simple_bot.py [-h] -c CON -v VIC
+usage: simple_bot.py [-h] [-o] -c CON -v VIC
 
 optional arguments:
   -h, --help            show this help message and exit
+  -o, --printout        Print all activity to stdout
 
 required arguments:
   -c CON, --config CON  Path to config file
@@ -45,5 +46,5 @@ required arguments:
 
 **Usage Example**
 ```
-./simple_bot.py -c config.conf -v victims.txt
+./simple_bot.py -c config.conf -v victims.txt -o
 ```
