@@ -13,6 +13,7 @@ g_prefix = ""
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('-o','--printout',action='store_true',dest='out',help='Print all activity to stdout')
     reqd = parser.add_argument_group('required arguments')
     reqd.add_argument('-c','--config',action='store',dest='con',help='Path to config file',required=True)
     reqd.add_argument('-v', '--victim',action='store',dest='vic',help='Path to username file',required=True)
@@ -37,7 +38,7 @@ def main():
     keys = _get_keys(args.con)
     
     try:
-        thread_list = _get_threads(_get_twitter_api(keys), _get_victims(args.vic), log)
+        thread_list = _get_threads(_get_twitter_api(keys), _get_victims(args.vic), log, args.out)
         print(g_prefix+"Starting bot threads")
         for bot in thread_list:
             bot.start()
@@ -52,7 +53,7 @@ def main():
             
     sys.exit(0)
 
-def _get_threads(apis, victim, log):
+def _get_threads(apis, victim, log, print_out):
     '''
     Instantiate and return a list of bot objects
 
@@ -106,7 +107,7 @@ def _get_threads(apis, victim, log):
                 if tweet_media is not None:
                     for media in tweet_media:
                         if media[0] == api.me().screen_name:
-                            bot = Soldier(api, texts[1], victim[int(res)], log, media[1])
+                            bot = Soldier(api, texts[1], victim[int(res)], log, print_out, media[1])
                 else:
                     bot = Soldier(api, texts[1], victim[int(res)], log, tweet_media)
 
@@ -203,15 +204,17 @@ class Soldier(Thread):
     @param string username to tweet to
     @param list of media file paths
     '''    
-    def __init__(self, twatter_api, text, victim, log, media=None):
+    def __init__(self, twatter_api, text, victim, log, print_out, media=None):
         Thread.__init__(self)
         global b_prefix
+        global g_prefix
         self.twatter_api = twatter_api
         self.media_list = media
         self.text_list = text
         self.victim = victim
         self.tweet_ids = []
         self.log = log
+        self.print_out = print_out
 
     def run(self):
         '''
@@ -240,6 +243,10 @@ class Soldier(Thread):
                         else: # Otherwise reply with text only
                             self.twatter_api.update_status('@'+self.victim+' '+
                                                            reply, in_reply_to_status_id=tweet.id)
+
+                        if media == "":
+                            media = "<none>"
+                        print("Reply: "+reply+" sent to @"+self.victim+" With file: "+media)
                         self.log.info("Reply: "+reply+" sent to @"+self.victim+" With file: "+media)
                     except tweepy.TweepError as e: # Catch error and return
                         if e.api_code == 88:
