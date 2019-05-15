@@ -19,16 +19,9 @@ The bot targets (users to respond to) must be passed at runtime using the `-v` o
 
 **Required Packages**
 
-&nbsp;&nbsp;tweepy
+&nbsp;&nbsp;install requirements
 ```
-pip install tweepy
-```
-
-**Optional Packages**
-
-&nbsp;&nbsp;colorama
-```
-pip install colorama
+pip install -r requirements.txt
 ```
 
 **Usage**
