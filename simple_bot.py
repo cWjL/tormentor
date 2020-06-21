@@ -50,6 +50,7 @@ def main():
         print('\n'+g_prefix+"User interrupt")
     except Exception as e:
         print(b_prefix+"Error: "+str(e))
+        print(b_prefix+str(traceback.print_exc()))
             
     sys.exit(0)
 
@@ -261,7 +262,7 @@ class Soldier(Thread):
                         return
                     except IndexError:
                         print(b_prefix+self.twatter_api.me().screen_name+" is out of text to tweet")
-                        self.log.info("Wordlist empty")
+                        self.log.info("Wordlist empty. Killing "+self.twatter_api.me().screen_name+" bot")
                         return
 
             time.sleep(2)

@@ -23,6 +23,10 @@ The bot targets (users to respond to) must be passed at runtime using the `-v` o
 ```
 pip install -r requirements.txt
 ```
+Or
+```
+python3 -m pip install -r requirements.txt
+```
 
 **Usage**
 ```
