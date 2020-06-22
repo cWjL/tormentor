@@ -45,6 +45,7 @@ def main():
         print(g_prefix+"Bots running")
         for bot in thread_list:
             bot.join()
+
         print(g_prefix+"Bots done")
     except KeyboardInterrupt:
         print('\n'+g_prefix+"User interrupt")
@@ -229,12 +230,13 @@ class Soldier(Thread):
         if self.media_list is None:
             self.media_list = []
         while True:
-            for tweet in self.twatter_api.user_timeline(screen_name=self.victim, count=1):
-                # Find latest tweet that is less than five minutes old
-                if ((time.time() - (tweet.created_at - datetime.datetime(1970,1,1)).total_seconds() < 300) and
-                    (tweet.id not in self.tweet_ids)):
-                    self.tweet_ids.append(tweet.id)
-                    try:
+            try:
+                for tweet in self.twatter_api.user_timeline(screen_name=self.victim, count=1):
+                    # Find latest tweet that is less than five minutes old
+                    if ((time.time() - (tweet.created_at - datetime.datetime(1970,1,1)).total_seconds() < 300) and
+                        (tweet.id not in self.tweet_ids)):
+                        self.tweet_ids.append(tweet.id)
+                        try:
                         reply = self.text_list.pop(0)
                         media = ""
                         if len(self.media_list) > 0: # Reply with media if there it exists
@@ -247,21 +249,24 @@ class Soldier(Thread):
                             media = "<none>"
                         print("Reply: "+reply+" sent to @"+self.victim+" With file: "+media)
                         self.log.info("Reply: "+reply+" sent to @"+self.victim+" With file: "+media)
-                    except tweepy.TweepError as e: # Catch error and return
-                        if e.api_code == 88:
-                            print(b_prefix+self.twatter_api.me().screen_name+" [Rate limited] "+str(e))
-                        elif e.api_code == 64:
-                            print(b_prefix+self.twatter_api.me().screen_name+" [Suspended] "+str(e))
-                        elif e.api_code == 136:
-                            print(b_prefix+self.twatter_api.me().screen_name+" [Blocked] "+str(e))
-                        else:
-                            print(b_prefix+self.twatter_api.me().screen_name+" [Other] "+str(e))
-                        self.log.info("Twitter Error: "+str(e))
-                        return
-                    except IndexError:
-                        print(b_prefix+self.twatter_api.me().screen_name+" is out of text to tweet")
-                        self.log.info("Wordlist empty. Killing "+self.twatter_api.me().screen_name+" bot")
-                        return
+            except tweepy.TweepError as e: # Catch error and return
+                if e.api_code == 88:
+                    print(b_prefix+self.twatter_api.me().screen_name+" [Rate limited] "+str(e))
+                elif e.api_code == 64:
+                    print(b_prefix+self.twatter_api.me().screen_name+" [Suspended] "+str(e))
+                elif e.api_code == 136:
+                    print(b_prefix+self.twatter_api.me().screen_name+" [Blocked] "+str(e))
+                elif e.api_code == 503:
+                    time.sleep(5)
+                    continue
+                else:
+                    print(b_prefix+self.twatter_api.me().screen_name+" [Other] "+str(e))
+                self.log.info("Twitter Error: "+str(e))
+                return
+            except IndexError:
+                print(b_prefix+self.twatter_api.me().screen_name+" is out of text to tweet")
+                self.log.info("Wordlist empty. Killing "+self.twatter_api.me().screen_name+" bot")
+                return
 
             time.sleep(2)
 
