@@ -256,8 +256,9 @@ class Soldier(Thread):
                     print(b_prefix+self.twatter_api.me().screen_name+" [Suspended] "+str(e))
                 elif e.api_code == 136:
                     print(b_prefix+self.twatter_api.me().screen_name+" [Blocked] "+str(e))
-                elif e.api_code == 503:
-                    time.sleep(5)
+                elif e.api_code == 503 or e.api_code == 130:
+                    self.log.info("Over capacity - taking a break and trying again.: "+str(e))
+                    time.sleep(3)
                     continue
                 else:
                     print(b_prefix+self.twatter_api.me().screen_name+" [Other] "+str(e))
