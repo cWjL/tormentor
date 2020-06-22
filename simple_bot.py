@@ -239,11 +239,9 @@ class Soldier(Thread):
                         media = ""
                         if len(self.media_list) > 0: # Reply with media if there it exists
                             media = self.media_list.pop(0)
-                            self.twatter_api.update_with_media(media,'@'+self.victim+' '+
-                                                               reply, in_reply_to_status_id=tweet.id)
+                            self.twatter_api.update_with_media(media,reply, in_reply_to_status_id=tweet.id)
                         else: # Otherwise reply with text only
-                            self.twatter_api.update_status('@'+self.victim+' '+
-                                                           reply, in_reply_to_status_id=tweet.id)
+                            self.twatter_api.update_status(reply, in_reply_to_status_id=tweet.id)
 
                         if media == "":
                             media = "<none>"
