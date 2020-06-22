@@ -71,13 +71,69 @@ def _get_threads(apis, victim, log, print_out):
     tweet_media = []
     bot_threads = []
     res = ""
+
+    ''' TESTING '''
+    # Trying to attach word lists to victims instead of bot account
+    # for api in apis:
+
+    #     if not api.verify_credentials():
+    #         print(b_prefix+"ERROR: Twitter AUTH failure for: "+api.get_user(screen_name))
+    #         log.error("Twitter AUTH failure for: "+api.get_user(screen_name))
+    #         raise tweepy.TweepError
+
+    #     print(g_prefix+"@"+api.me().screen_name+" authenticated and connected")
+    #     log.info("@"+api.me().screen_name+" authenticated and connected")
+
+    #     i = 0
+    #     who = True
+    #     print(g_prefix+"Select from list:")
+    #     for vic in victim:
+    #         print("\t["+str(i)+"] "+vic)
+    #         i += 1
+    #     # Select the victim
+    #     while who:
+    #         res = input(g_prefix+"Who should "+api.me().screen_name+" torment? ")
+    #         if int(res) >= 0 and int(res) < len(victim):
+    #             who = False
+    #         else:
+    #             print(b_prefix+"Incorrect selection")
+    #     i = int(res)
+    #     # victim[int(i)] is the selected victim
+    #     res = input(g_prefix+"Give me the path to "+victim[i]+"/'s wordlist: ")
+    #     tweet_text.append((victim[i], _get_tweet_text(res))) # Get tweet text for replies
+
+    #     res = ""
+    #     res = input(g_prefix+"Give me the path to "+victim[i]+"/'s media files, or <ENTER> for none: ")
+    #     if res != "":
+    #         tweet_media.append((api.me().screen_name, _get_media_files(res))) # Get media files for replies
+    #     else:
+    #         tweet_media = None
+
+    #     # Get instantiated bots
+    #     for texts in tweet_text:
+    #         if texts[0] == victim[i]:
+    #             if tweet_media is not None:
+    #                 for media in tweet_media:
+    #                     if media[0] == victim[i]:
+    #                         bot = Soldier(api, texts[1], victim[i], log, print_out, media[1])
+    #             else:
+    #                 bot = Soldier(api, texts[1], victim[i], log, tweet_media)
+
+    #     bot.daemon = True
+    #     bot_threads.append(bot)
+
+
+    ''' /TESTING '''
+
     for api in apis:
 
         if not api.verify_credentials():
             print(b_prefix+"ERROR: Twitter AUTH failure for: "+api.get_user(screen_name))
+            log.error("Twitter AUTH failure for: "+api.get_user(screen_name))
             raise tweepy.TweepError
         
         print(g_prefix+"@"+api.me().screen_name+" authenticated and connected")
+        log.info("@"+api.me().screen_name+" authenticated and connected")
         
         res = input(g_prefix+'Give me the path to '+api.me().screen_name+' wordlist: ')
         tweet_text.append((api.me().screen_name, _get_tweet_text(res))) # Get tweet text for replies
