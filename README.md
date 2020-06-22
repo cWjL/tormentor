@@ -15,7 +15,12 @@ Simple multithreaded python Twitter bot.  Uses configuration file passed at runt
 ```
 With `<key>` and `<secret>` being the API keys obtained from Twitter, in string format.  The `KEY`, `<value>` pairs must be tab separated.<br />
 
-The bot targets (users to respond to) must be passed at runtime using the `-v` or `--victim` flags and must be a list of string usernames.<br />
+The bot targets (users to respond to) must be passed at runtime using the `-v` or `--victim` flags and must be a list of string usernames, without the '@'.<br />
+```
+	Victim1
+	Victim2
+	Victim3
+```
 
 **Python Version**
 ```
