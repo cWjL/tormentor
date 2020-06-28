@@ -209,7 +209,7 @@ class Soldier(Thread):
     @param string username to tweet to
     @param list of media file paths
     '''    
-    def __init__(self, twatter_api, text, victims, log, print_out, media=None):
+    def __init__(self, twatter_api, text, victim, log, print_out, media=None):
         Thread.__init__(self)
         global b_prefix
         global g_prefix
