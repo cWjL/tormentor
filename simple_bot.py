@@ -8,9 +8,6 @@ from threading import Thread
 '''
 Simple twitter bot
 '''
-b_prefix = ""
-g_prefix = ""
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-o','--printout',action='store_true',dest='out',help='Print all activity to stdout')
@@ -22,103 +19,102 @@ def main():
     log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s',
                         datefmt='%a, %d %b %Y %H:%M:%S', filename='logs/torment.log', filemode='w')
-    
-    global b_prefix
-    global g_prefix
-    
+    prefix = []
     try:
         import colorama
         from colorama import Fore, Style
-        b_prefix = "["+Fore.RED+" FAIL "+Style.RESET_ALL+"] "
-        g_prefix = "["+Fore.GREEN+"  OK  "+Style.RESET_ALL+"] "
+        prefix.append("["+Fore.RED+" FAIL "+Style.RESET_ALL+"] ")
+        prefix.append("["+Fore.GREEN+"  OK  "+Style.RESET_ALL+"] ")
     except ImportError:
-        b_prefix = "[ FAIL ] "
-        g_prefix = "[  OK  ] "
+        prefix.append("[ FAIL ] ")
+        prefix.append("[  OK  ] ")
         
-    keys = _get_keys(args.con)
-    
     try:
-        thread_list = _get_threads(_get_twitter_api(keys), _get_victims(args.vic), log, args.out)
-        print(g_prefix+"Starting bot threads")
-        for bot in thread_list:
-            bot.start()
-        print(g_prefix+"Bots running")
-        for bot in thread_list:
-            bot.join()
-
-        print(g_prefix+"Bots done")
-    except KeyboardInterrupt:
-        print('\n'+g_prefix+"User interrupt")
-    except Exception as e:
-        print(b_prefix+"Error: "+str(e))
-        print(b_prefix+str(traceback.print_exc()))
+        keys = _get_keys(args.con)
+        victims = _get_victims(args.vic)
+    except IOError as e:
+        log.error(str(e)+": "+args.con)
+        print(prefix[0]+str(e))
+        sys.exit(1)
+    except ValueError as e:
+        log.error(str(e)+": "+args.vic)
+        print(prefix[0]+str(e))
+        sys.exit(1)
+        
+    try:
+        api_list = _get_twitter_api(keys)
+    except tweepy.TweepError as e:
+        log.error("Auth error: "+str(e))
+        print(prefix[0]+"Twitter auth error in one or more users.  Check log")
+        sys.exit(1)
+        
+    threads = []
+    for api in api_list:
+        list_vic = victims
+        more = True
+        
+        while more:
+            print(prefix[1]+"Select from list:")
+            i = 0
             
-    sys.exit(0)
-
-def _get_threads(apis, victim, log, print_out):
-    '''
-    Instantiate and return a list of bot objects
-
-    @param list twitter apis
-    @param list victims
-    @return list of Soldier objects
-    '''
-    global b_prefix
-    global g_prefix
-    
-    tweet_ids = []
-    tweet_text = []
-    tweet_media = []
-    bot_threads = []
-    res = ""
-
-    for api in apis:
-
-        if not api.verify_credentials():
-            print(b_prefix+"ERROR: Twitter AUTH failure for: "+api.get_user(screen_name))
-            log.error("Twitter AUTH failure for: "+api.get_user(screen_name))
-            raise tweepy.TweepError
-        
-        print(g_prefix+"@"+api.me().screen_name+" authenticated and connected")
-        log.info("@"+api.me().screen_name+" authenticated and connected")
-        
-        res = input(g_prefix+'Give me the path to '+api.me().screen_name+' wordlist: ')
-        tweet_text.append((api.me().screen_name, _get_tweet_text(res))) # Get tweet text for replies
-        
-        res = ""
-        res = input(g_prefix+"Give me the path to "+api.me().screen_name+" media files, or <ENTER> for none: ")
-        if res != "":
-            tweet_media.append((api.me().screen_name, _get_media_files(res))) # Get media files for replies
-        else:
-            tweet_media = None
-
-    for api in apis:
-        i = 0
-        who = True
-        print(g_prefix+"Select from list:")
-        for vic in victim:
-            print("\t["+str(i)+"] "+vic)
-            i += 1
-        # Select the victim
-        while who:
-            res = input(g_prefix+"Who should "+api.me().screen_name+" torment? ")
-            if int(res) >= 0 and int(res) < len(victim):
-                who = False
-            else:
-                print(b_prefix+"Incorrect selection")
-        # Get instantiated bots
-        for texts in tweet_text:
-            if texts[0] == api.me().screen_name:
-                if tweet_media is not None:
-                    for media in tweet_media:
-                        if media[0] == api.me().screen_name:
-                            bot = Soldier(api, texts[1], victim[int(res)], log, print_out, media[1])
+            for vic in list_vic:
+                print("\t["+str(i)+"] "+vic)
+                i += 1
+            res = input(prefix[1]+"Who should "+api.me().screen_name+" torment?")
+            
+            if int(res) >= 0 and int(res) < len(list_vic):
+                wl = input(prefix[1]+'Give me the path to '+list_vic[i]+' wordlist: ')
+                try:
+                    tmp_wl_txt = _get_tweet_text(wl)
+                except IOError:
+                    log.error("File not found: "+wl)
+                    print(prefix[0]+wl+" not found.  Try again")
+                    continue
+                m = input(prefix[1]+'Give me the path to '+list_vic[i]+' media directory, or <ENTER> for none: ')
+                try:
+                    if m != "":
+                        tmp_m_txt = _get_media_files(m)
+                    else:
+                        tmp_m_txt = None
+                except IOError:
+                    log.error("Files not found: "+m)
+                    print(prefix[0]+m+" not found.  Try again")
+                    continue
+                    
+                victim_list.append(Victim(list_vic[i]))                
+                victim_list[len(victim_list)-1].set_words(tmp_wl_txt)
+                victim_list[len(victim_list)-1].set_media(tmp_m_txt)
+                
+            if len(list_vic) > 0:
+                soldier = Soldier(api, victim_list, log, prefix)
+                soldier.daemon = True
+                threads.append(soldier)
+                
+                res = imput(prefix[1]+"Add another victim? [Y/N]: ")
+                
+                if res == 'N' or res == 'n' or res == "No" or res == "no":
+                    more = False
                 else:
-                    bot = Soldier(api, texts[1], victim[int(res)], log, tweet_media)
+                    list_vic.pop(i)
+    print(prefix[1]+"Starting bot threads")
+    try:
+        for bot in threads:
+            bot.start()
+        log.info("Threads running")
+        print(prefix[1]+"Bots running")
+        for bot in threads:
+            bot.join()
+        log.info("All threads done")
+        print(prefix[1]+"All bot threads are done")
+    except KeyboardInterrupt:
+        log.warning("User interrupt")
+        print('\n'+prefix[1]+"User interrupt")
+    except Exception as e:
+        log.error("Error: "+str(e))
+        print(prefix[0]+"Error: "+str(e))
+        print(prefix[0]+str(traceback.print_exc()))  
 
-        bot.daemon = True
-        bot_threads.append(bot)
-    return bot_threads
+    sys.exit(0)
 
 def _get_tweet_text(fp):
     '''
@@ -132,20 +128,7 @@ def _get_tweet_text(fp):
         text = (line.rstrip() for line in twt)
         text = list(line for line in text if line)
     return text
-
-def _get_media_files(fp):
-    '''
-    Get media files from a directory
-
-    @param file path
-    @return list of media files
-    '''
-    files = []
-    for file in os.listdir(fp):
-        files.append(os.path.join(fp,file))
-
-    return files
-
+  
 def _get_victims(fp):
     '''
     Get list of users to torment
@@ -156,8 +139,10 @@ def _get_victims(fp):
     torment = []
     with open(fp,'r') as in_file:
         torment = in_file.readlines()
+        if not isinstance(torment, list) and ',' in torment:
+            raise ValueError("Comma separated list not supported")
     return torment
-    
+        
 def _get_keys(fp):
     '''
     Get user api keys from config file
@@ -167,8 +152,11 @@ def _get_keys(fp):
     '''
     keys = []
     user_keys = []
-    with open(fp,'r') as f:
-        keys = f.readlines()
+    try:
+        with open(fp,'r') as f:
+            keys = f.readlines()
+    except IOError:
+        raise IOError("Config file not found")
 
     for i in range(0, len(keys)):
         if '@' in keys[i]:
@@ -180,7 +168,7 @@ def _get_keys(fp):
             user_keys.append((keys[i], tmp))
 
     return user_keys
-
+    
 def _get_twitter_api(api_keys):
     '''
     Returns a list of authenticated twitter apis
@@ -199,28 +187,38 @@ def _get_twitter_api(api_keys):
         tweepy_apis.append(tweepy.API(auth))
 
     return tweepy_apis
-
+    
+class Victim:
+    '''
+    Store victim information
+    
+    @param string Twitter user name
+    '''
+    def __init__(self, name):
+        self.name = name
+        
+    def set_words(self, words):
+        self.wordslist = words
+        
+    def set_media(self, media=None):
+        self.media = media
+        
 class Soldier(Thread):
     '''
     Bot thread
 
     @param twitter api
-    @param list of text to tweet
-    @param string username to tweet to
-    @param list of media file paths
-    '''    
-    def __init__(self, twatter_api, text, victim, log, print_out, media=None):
+    @param list of victim objects
+    @param log
+    ''' 
+    def __init__(self, api, vic_list ,log, prefix):
         Thread.__init__(self)
-        global b_prefix
-        global g_prefix
-        self.twatter_api = twatter_api
-        self.media_list = media
-        self.text_list = text
-        self.victim = victim
-        self.tweet_ids = []
+        self.api = api
+        self.vic_list = vic_list
         self.log = log
-        self.print_out = print_out
-
+        self.tweet_ids = []
+        self.prefix = prefix
+        
     def run(self):
         '''
         Bot worker thread function
@@ -230,50 +228,42 @@ class Soldier(Thread):
         @return on IndexError
         '''
         self.log.info(self.twatter_api.me().screen_name+" thread started")
-        if self.media_list is None:
-            self.media_list = []
         while True:
-            try:
-                for tweet in self.twatter_api.user_timeline(screen_name=self.victim, count=1):
-                    # Find latest tweet that is less than five minutes old
-                    if ((time.time() - (tweet.created_at - datetime.datetime(1970,1,1)).total_seconds() < 300) and
-                        (tweet.id not in self.tweet_ids)):
-                        self.tweet_ids.append(tweet.id)
-                        reply = self.text_list.pop(0)
-                        media = ""
-                        if len(self.media_list) > 0: # Reply with media if there it exists
-                            media = self.media_list.pop(0)
-                            self.twatter_api.update_with_media(media,reply, in_reply_to_status_id=tweet.id)
-                        else: # Otherwise reply with text only
-                            self.twatter_api.update_status(reply, in_reply_to_status_id=tweet.id)
+            for vic in self.vic_list
+                try:
+                    for tweet in self.api.user_timeline(screen_name=vic.name, count=1):
+                        # Find latest tweet that is less than five minutes old
+                        if ((time.time() - (tweet.created_at - datetime.datetime(1970,1,1)).total_seconds() < 300) and
+                            (tweet.id not in self.tweet_ids)):
+                            self.tweet_ids.append(tweet.id)
+                            reply = vic.wordlist.pop(0)
+                            if vic.media is not None:
+                                media = vic.media.pop(0)
+                                self.api.update_with_media(media, reply, in_reply_to_status_id=tweet.id)
+                            else:
+                                self.api.update_status(reply, in_reply_to_status_id=tweet.id)
+                                
+                            print(self.prefix[1]+"Reply: "+reply+" sent to: "+vic.name+" with file: "+str(media))
+                except tweepy.TweepError as e: # Catch error and return
+                    if e.api_code == 88:
+                        print(self.prefix[0]+self.api.me().screen_name+" [Rate limited] "+str(e))
+                    elif e.api_code == 64:
+                        print(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
+                    elif e.api_code == 136:
+                        print(self.prefix[0]+self.api.me().screen_name+" [Blocked] "+str(e))
+                    elif e.api_code == 503 or e.api_code == 130:
+                        self.log.info("Over capacity - taking a break and trying again.: "+str(e))
+                        time.sleep(3)
+                        continue
+                    else:
+                        print(self.prefix[0]+self.api.me().screen_name+" [Other] "+str(e))
+                    self.log.error("Twitter Error: "+str(e))
+                    return
+                except IndexError:
+                    print(self.prefix[0]+vic.name+" is out of text to tweet")
+                    self.log.info(vic.name+" Wordlist empty.")
+                    slef.vic_list.pop(vic_list.index(vic.name))
+                    if len(vic_list) == 0:
+                        return
 
-                        if media == "":
-                            media = "<none>"
-                        print("Reply: "+reply+" sent to @"+self.victim+" With file: "+media)
-                        self.log.info("Reply: "+reply+" sent to @"+self.victim+" With file: "+media)
-            except tweepy.TweepError as e: # Catch error and return
-                if e.api_code == 88:
-                    print(b_prefix+self.twatter_api.me().screen_name+" [Rate limited] "+str(e))
-                elif e.api_code == 64:
-                    print(b_prefix+self.twatter_api.me().screen_name+" [Suspended] "+str(e))
-                elif e.api_code == 136:
-                    print(b_prefix+self.twatter_api.me().screen_name+" [Blocked] "+str(e))
-                elif e.api_code == 503 or e.api_code == 130:
-                    self.log.info("Over capacity - taking a break and trying again.: "+str(e))
-                    time.sleep(3)
-                    continue
-                else:
-                    print(b_prefix+self.twatter_api.me().screen_name+" [Other] "+str(e))
-                self.log.info("Twitter Error: "+str(e))
-                return
-            except IndexError:
-                print(b_prefix+self.twatter_api.me().screen_name+" is out of text to tweet")
-                self.log.info("Wordlist empty. Killing "+self.twatter_api.me().screen_name+" bot")
-                return
-
-            time.sleep(2)
-
-if __name__ == "__main__":
-    if not os.path.exists("logs"):
-        os.makedirs("logs")
-    main()
+            time.sleep(2) 
