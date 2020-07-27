@@ -43,7 +43,7 @@ def main():
         banner = _get_banner()
         
     print(banner)
-        
+    time.sleep(1)
     print(prefix[1]+"Fetching config")
     try:
         keys = _get_keys(args.con)
@@ -106,7 +106,7 @@ def main():
                 
             list_vic.pop(int(res))
 
-            soldier = Soldier(api, victim_list, log, prefix)
+            soldier = Soldier(api, victim_list, log, prefix, args.out)
             soldier.daemon = True
             threads.append(soldier)
             
@@ -250,13 +250,14 @@ class Soldier(Thread):
     @param log
     @param prefix list
     ''' 
-    def __init__(self, api, vic_list ,log, prefix):
+    def __init__(self, api, vic_list ,log, prefix, stdout):
         Thread.__init__(self)
         self.api = api
         self.vic_list = vic_list
         self.log = log
         self.tweet_ids = []
         self.prefix = prefix
+        self.stdout = stdout
         
     def run(self):
         '''
@@ -279,11 +280,14 @@ class Soldier(Thread):
                             if vic.media is not None:
                                 media = vic.media.pop(0)
                                 self.api.update_with_media(media, vic.name+" "+reply, in_reply_to_status_id=tweet.id)
-                                print(self.prefix[1]+"Reply: "+reply+" sent to: "+vic.name+" with file: "+str(media))
+                                if self.stdout:
+                                    print(self.prefix[1]+"Reply: "+reply+" sent to: "+vic.name+" with file: "+str(media))
+                                self.log.info("Reply: "+reply+" sent to: "+vic.name+" with file: "+str(media))
                             else:
                                 self.api.update_status(vic.name+" "+reply, in_reply_to_status_id=tweet.id)
-                                print(self.prefix[1]+"Reply: "+reply+" sent to: "+vic.name)
-                                                           
+                                if self.stdout:
+                                    print(self.prefix[1]+"Reply: "+reply+" sent to: "+vic.name)
+                                self.log.info("Reply: "+reply+" sent to: "+vic.name)
                 except tweepy.TweepError as e: # Catch error and return
                     if e.api_code == 88:
                         print(self.prefix[0]+self.api.me().screen_name+" [Rate limited] "+str(e))
