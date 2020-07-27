@@ -15,12 +15,15 @@ Simple multithreaded python Twitter bot.  Uses configuration file passed at runt
 ```
 With `<key>` and `<secret>` being the API keys obtained from Twitter, in string format.  The `KEY`, `<value>` pairs must be tab separated.<br />
 
+Each `@<user>` will create an individual bot, each with their own list of targets (users to torment) and associated word and media lists [all of which will be set up at runtime].<br />
+
 The bot targets (users to respond to) must be passed at runtime using the `-v` or `--victim` flags and must be a list of Twitter screenames.<br />
 ```
 	@Victim1
 	@Victim2
 	@Victim3
 ```
+Use `-o` or `--printout` to print all bot responses to stdout.<br />
 
 **Python Version**
 ```
