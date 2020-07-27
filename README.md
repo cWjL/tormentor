@@ -1,4 +1,4 @@
-# simple_bot
+# tormentor
 
 Simple multithreaded python Twitter bot.  Uses configuration file passed at runtime to define the number of threads to create.  Configuration file must be passed using either `-c` or `--config` flags and be in the following format:
 ```
@@ -40,7 +40,7 @@ python3 -m pip install -r requirements.txt
 
 **Usage**
 ```
-usage: simple_bot.py [-h] [-o] -c CON -v VIC
+usage: tormentor.py [-h] [-o] -c CON -v VIC
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -53,5 +53,5 @@ required arguments:
 
 **Usage Example**
 ```
-./simple_bot.py -c config.conf -v victims.txt -o
+./tormentor.py -c config.conf -v victims.txt -o
 ```
