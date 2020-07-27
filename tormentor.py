@@ -6,7 +6,15 @@ import argparse, traceback, time, datetime
 import logging
 from threading import Thread
 '''
-Simple twitter bot
+▄▄▄▄▄      ▄▄▄  • ▌ ▄ ·. ▄▄▄ . ▐ ▄ ▄▄▄▄▄      ▄▄▄  
+•██  ▪     ▀▄ █··██ ▐███▪▀▄.▀·•█▌▐█•██  ▪     ▀▄ █·
+ ▐█.▪ ▄█▀▄ ▐▀▀▄ ▐█ ▌▐▌▐█·▐▀▀▪▄▐█▐▐▌ ▐█.▪ ▄█▀▄ ▐▀▀▄ 
+ ▐█▌·▐█▌.▐▌▐█•█▌██ ██▌▐█▌▐█▄▄▌██▐█▌ ▐█▌·▐█▌.▐▌▐█•█▌
+ ▀▀▀  ▀█▄▀▪.▀  ▀▀▀  █▪▀▀▀ ▀▀▀ ▀▀ █▪ ▀▀▀  ▀█▄▀▪.▀  ▀
+       Welcome to the Twitter Tormentor.
+       
+    Your friendly multi-threaded, multi-target
+          Twitter harassment machine.
 '''
 def main():
     parser = argparse.ArgumentParser()
@@ -23,17 +31,18 @@ def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s',
                         datefmt='%a, %d %b %Y %H:%M:%S', filename='logs/torment.log', filemode='w')
     prefix = []
-
     try:
         import colorama
         from colorama import Fore, Style
         prefix.append("["+Fore.RED+" FAIL "+Style.RESET_ALL+"] ")
         prefix.append("["+Fore.GREEN+"  OK  "+Style.RESET_ALL+"] ")
-        print(Fore.RED+_get_banner()+Style.RESET_ALL)
+        banner = Fore.RED+_get_banner()+Style.RESET_ALL
     except ImportError:
         prefix.append("[ FAIL ] ")
         prefix.append("[  OK  ] ")
-        print(_get_banner())
+        banner = _get_banner()
+        
+    print(banner)
         
     print(prefix[1]+"Fetching config")
     try:
@@ -105,9 +114,9 @@ def main():
                 cont = input(prefix[1]+"Add another victim? [Y/N]: ")
                 if cont.lower() == 'n' or cont.lower() == "no" or cont.lower() == "" or cont.lower() == " ":
                     more = False
- 
             else:
                 more = False
+                
     print(prefix[1]+"Starting bot threads")
     try:
         for bot in threads:
@@ -239,6 +248,7 @@ class Soldier(Thread):
     @param twitter api
     @param list of victim objects
     @param log
+    @param prefix list
     ''' 
     def __init__(self, api, vic_list ,log, prefix):
         Thread.__init__(self)
