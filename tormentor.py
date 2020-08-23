@@ -288,11 +288,18 @@ class Soldier(Thread):
                 except tweepy.TweepError as e: # Catch error and return
                     if e.api_code == 88:
                         print(self.prefix[0]+self.api.me().screen_name+" [Rate limited] "+str(e))
+                        log.error(self.prefix[0]+self.api.me().screen_name+" [Rate limited] "+str(e))
                     elif e.api_code == 64:
                         print(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
+                        log.error(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
                     elif e.api_code == 136:
                         print(self.prefix[0]+self.api.me().screen_name+" [Blocked] "+str(e))
+                        log.error(self.prefix[0]+self.api.me().screen_name+" [Blocked] "+str(e))
+                    elif e.api_code == 187:
+                        print(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet]. Fix wordlist. Aborting")
+                        log.error(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet] "+str(e))  
                     elif e.api_code == 503 or e.api_code == 130:
+                        print(self.prefix[0]+"Over capacity - taking a break and trying again.: "+str(e))
                         self.log.info("Over capacity - taking a break and trying again.: "+str(e))
                         time.sleep(3)
                         continue
