@@ -107,7 +107,7 @@ def main():
                 
                 rep = input(prefix[1]+"Continue running this wordlist indefinitely [y/n]?: ")
                 if rep.lower() == "y" or rep.lower() == "yes":
-                    victim_list[len(victim_list-1).set_repeat = True]
+                    victim_list[len(victim_list-1)].set_repeat = True
                 
             list_vic.pop(int(res))
 
