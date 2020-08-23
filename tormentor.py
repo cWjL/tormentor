@@ -5,6 +5,7 @@ import tweepy, time, sys, datetime, os, re
 import argparse, traceback, time, datetime
 import logging
 from threading import Thread
+
 '''
 ▄▄▄▄▄      ▄▄▄  • ▌ ▄ ·. ▄▄▄ . ▐ ▄ ▄▄▄▄▄      ▄▄▄  
 •██  ▪     ▀▄ █··██ ▐███▪▀▄.▀·•█▌▐█•██  ▪     ▀▄ █·
@@ -103,6 +104,10 @@ def main():
                 victim_list.append(Victim(list_vic[int(res)]))                
                 victim_list[len(victim_list)-1].set_words(tmp_wl_txt)
                 victim_list[len(victim_list)-1].set_media(tmp_m_txt)
+                
+                rep = input(prefix[1]+"Continue running this wordlist indefinitely [y/n]?: ")
+                if rep.lower() == "y" or rep.lower() == "yes":
+                    victim_list[len(victim_list-1).set_repeat = True]
                 
             list_vic.pop(int(res))
 
@@ -211,20 +216,6 @@ def _get_twitter_api(api_keys):
         tweepy_apis.append(tweepy.API(auth))
 
     return tweepy_apis
-
-def _get_banner():
-    return '''
-    
-▄▄▄▄▄      ▄▄▄  • ▌ ▄ ·. ▄▄▄ . ▐ ▄ ▄▄▄▄▄      ▄▄▄  
-•██  ▪     ▀▄ █··██ ▐███▪▀▄.▀·•█▌▐█•██  ▪     ▀▄ █·
- ▐█.▪ ▄█▀▄ ▐▀▀▄ ▐█ ▌▐▌▐█·▐▀▀▪▄▐█▐▐▌ ▐█.▪ ▄█▀▄ ▐▀▀▄ 
- ▐█▌·▐█▌.▐▌▐█•█▌██ ██▌▐█▌▐█▄▄▌██▐█▌ ▐█▌·▐█▌.▐▌▐█•█▌
- ▀▀▀  ▀█▄▀▪.▀  ▀▀▀  █▪▀▀▀ ▀▀▀ ▀▀ █▪ ▀▀▀  ▀█▄▀▪.▀  ▀
-       Welcome to the Twitter Tormentor.
-       
-    Your friendly multi-threaded, multi-target
-          Twitter harassment machine.
-    '''
     
 class Victim:
     '''
@@ -234,12 +225,18 @@ class Victim:
     '''
     def __init__(self, name):
         self.name = name
+        self.media = None
+        self.repeat = False
         
     def set_words(self, words):
         self.wordlist = words
+        self.refresh_words = words
         
-    def set_media(self, media=None):
+    def set_media(self, media):
         self.media = media
+        
+    def set_repeat(self, repeat):
+        self.repeat = repeat
         
 class Soldier(Thread):
     '''
@@ -306,13 +303,33 @@ class Soldier(Thread):
                 except IndexError:
                     print(self.prefix[0]+vic.name+" is out of text to tweet")
                     self.log.info(vic.name+" Wordlist empty.")
-                    self.vic_list.pop(self.vic_list.index(vic.name))
-                    if len(vic_list) == 0:
-                        return
+                    if vic.repeat == False:
+                        self.vic_list.pop(self.vic_list.index(vic.name))
+                        if len(vic_list) == 0:
+                            return
+                    else:
+                        vic.wordlist = vic.refresh_words
+                        print(self.prefix[0]+"Refreshing "+vic.name+" wordlist")
+                        self.log.info("Refreshing "+vic.name+" wordlist and restarting")
+                        continue
                 except KeyboardInterrupt:
                     return
 
             time.sleep(2)
+            
+def _get_banner():
+    return '''
+    
+▄▄▄▄▄      ▄▄▄  • ▌ ▄ ·. ▄▄▄ . ▐ ▄ ▄▄▄▄▄      ▄▄▄  
+•██  ▪     ▀▄ █··██ ▐███▪▀▄.▀·•█▌▐█•██  ▪     ▀▄ █·
+ ▐█.▪ ▄█▀▄ ▐▀▀▄ ▐█ ▌▐▌▐█·▐▀▀▪▄▐█▐▐▌ ▐█.▪ ▄█▀▄ ▐▀▀▄ 
+ ▐█▌·▐█▌.▐▌▐█•█▌██ ██▌▐█▌▐█▄▄▌██▐█▌ ▐█▌·▐█▌.▐▌▐█•█▌
+ ▀▀▀  ▀█▄▀▪.▀  ▀▀▀  █▪▀▀▀ ▀▀▀ ▀▀ █▪ ▀▀▀  ▀█▄▀▪.▀  ▀
+       Welcome to the Twitter Tormentor.
+       
+    Your friendly multi-threaded, multi-target
+          Twitter harassment machine.
+    '''
 
 if __name__ == "__main__":
     main()
