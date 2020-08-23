@@ -289,6 +289,8 @@ class Soldier(Thread):
                     if e.api_code == 88:
                         print(self.prefix[0]+self.api.me().screen_name+" [Rate limited] "+str(e))
                         log.error(self.prefix[0]+self.api.me().screen_name+" [Rate limited] "+str(e))
+                        time.sleep(15)
+                        continue
                     elif e.api_code == 64:
                         print(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
                         log.error(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
