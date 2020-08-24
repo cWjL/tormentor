@@ -24,13 +24,17 @@ def main():
     reqd.add_argument('-c','--config',action='store',dest='con',help='Path to config file',required=True)
     reqd.add_argument('-v', '--victim',action='store',dest='vic',help='Path to username file',required=True)
     args = parser.parse_args()
-
+    
     if not os.path.isdir('logs/'):
         os.mkdir('logs/')
-
-    log = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s',
+        log = logging.getLogger(__name__)
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s',
                         datefmt='%a, %d %b %Y %H:%M:%S', filename='logs/torment.log', filemode='w')
+    else:
+        log = logging.getLogger('logs/torment.log')
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s',
+                        datefmt='%a, %d %b %Y %H:%M:%S', filename=log.name, filemode='a')
+
     prefix = []
     try:
         import colorama
