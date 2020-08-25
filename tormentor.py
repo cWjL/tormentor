@@ -300,16 +300,16 @@ class Soldier(Thread):
                         print(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
                         log.error(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
                     elif e.api_code == 110:
-                        print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ"+str(e))
-                        log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ"+str(e))
+                        print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ: "+str(e))
+                        log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ: "+str(e))
                         self.api = _get_twitter_api(self.keys)
                         continue
                     elif e.api_code == 136:
                         print(self.prefix[0]+self.api.me().screen_name+" [Blocked] "+str(e))
                         log.error(self.prefix[0]+self.api.me().screen_name+" [Blocked] "+str(e))
                     elif e.api_code == 186:
-                        print(self.prefix[0]+self.api.me().screen_name+" [Tweet too Long] "+str(e))
-                        log.error(self.prefix[0]+self.api.me().screen_name+" [Tweet too Long] "+str(e))
+                        print(self.prefix[0]+self.api.me().screen_name+" [Tweet too Long] Skipping line and continuing: "+str(e))
+                        log.error(self.prefix[0]+self.api.me().screen_name+" [Tweet too Long] Skipping line and continuing: "+str(e))
                         continue
                     elif e.api_code == 187:
                         print(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet]. Fix wordlist. Aborting")
