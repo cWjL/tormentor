@@ -251,7 +251,7 @@ class Soldier(Thread):
     @param log
     @param prefix list
     ''' 
-    def __init__(self, api, vic_list ,log, prefix, stdout):
+    def __init__(self, api, vic_list ,log, prefix, stdout, keys):
         Thread.__init__(self)
         self.api = api
         self.vic_list = vic_list
@@ -259,6 +259,7 @@ class Soldier(Thread):
         self.tweet_ids = []
         self.prefix = prefix
         self.stdout = stdout
+        self.keys = keys
         
     def run(self):
         '''
@@ -298,9 +299,18 @@ class Soldier(Thread):
                     elif e.api_code == 64:
                         print(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
                         log.error(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
+                    elif e.api_code == 110:
+                        print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ"+str(e))
+                        log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ"+str(e))
+                        self.api = _get_twitter_api(self.keys)
+                        continue
                     elif e.api_code == 136:
                         print(self.prefix[0]+self.api.me().screen_name+" [Blocked] "+str(e))
                         log.error(self.prefix[0]+self.api.me().screen_name+" [Blocked] "+str(e))
+                    elif e.api_code == 186:
+                        print(self.prefix[0]+self.api.me().screen_name+" [Tweet too Long] "+str(e))
+                        log.error(self.prefix[0]+self.api.me().screen_name+" [Tweet too Long] "+str(e))
+                        continue
                     elif e.api_code == 187:
                         print(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet]. Fix wordlist. Aborting")
                         log.error(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet] "+str(e))  
