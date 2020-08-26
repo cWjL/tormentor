@@ -270,6 +270,7 @@ class Soldier(Thread):
         @return on IndexError
         '''
         self.log.info(self.api.me().screen_name+" thread started")
+        reconnects = 0
         while True:
             for vic in self.vic_list:
                 try:
@@ -292,18 +293,24 @@ class Soldier(Thread):
                                 self.log.info("Reply: "+reply+" sent to: "+vic.name)
                 except tweepy.TweepError as e: # Catch error and return
                     if e.api_code == 88:
-                        print(self.prefix[0]+self.api.me().screen_name+" [Rate limited] "+str(e))
-                        log.error(self.prefix[0]+self.api.me().screen_name+" [Rate limited] "+str(e))
+                        print(self.prefix[0]+self.api.me().screen_name+" [Rate limited] Taking a 15 second break "+str(e))
+                        log.error(self.prefix[0]+self.api.me().screen_name+" [Rate limited] Taking a 15 second break "+str(e))
                         time.sleep(15)
                         continue
                     elif e.api_code == 64:
                         print(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
                         log.error(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
                     elif e.api_code == 110:
-                        print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ: "+str(e))
-                        log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ: "+str(e))
-                        self.api = _get_twitter_api(self.keys)
-                        continue
+                        if reconnects < 3:
+                            print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ: "+str(e))
+                            log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ: "+str(e))
+                            time.sleep(5)
+                            self.api = self._get_twitter_api(self.keys)
+                            reconnects += 1
+                            continue
+                        else:
+                            print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Exceeded reconnect limit. Aborting: "+str(e))
+                            log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Exceeded reconnect limit. Aborting: "+str(e))
                     elif e.api_code == 136:
                         print(self.prefix[0]+self.api.me().screen_name+" [Blocked] "+str(e))
                         log.error(self.prefix[0]+self.api.me().screen_name+" [Blocked] "+str(e))
@@ -321,7 +328,6 @@ class Soldier(Thread):
                         continue
                     else:
                         print(self.prefix[0]+self.api.me().screen_name+" [Other] "+str(e))
-                    self.log.error("Twitter Error: "+str(e))
                     return
                 except IndexError:
                     print(self.prefix[0]+vic.name+" is out of text to tweet")
@@ -339,6 +345,25 @@ class Soldier(Thread):
                     return
 
             time.sleep(2)
+
+    def _get_twitter_api(api_keys):
+        '''
+        Returns a list of authenticated twitter apis
+
+        api_keys[0] is the user name
+        api_keys[1] is a list of the user's api keys
+
+        @param api_key_list
+        @return list of twitter apis
+        '''
+        tweepy_apis = []
+        for i in api_keys:
+            tmp = i[1]
+            auth = tweepy.OAuthHandler(re.sub('[^A-Za-z0-9\-]+','',tmp[0].split('\t')[1]), re.sub('[^A-Za-z0-9\-]+','',tmp[1].split('\t')[1]))
+            auth.set_access_token(re.sub('[^A-Za-z0-9\-]+','',tmp[2].split('\t')[1]), re.sub('[^A-Za-z0-9\-]+','',tmp[3].split('\t')[1]))
+            tweepy_apis.append(tweepy.API(auth))
+
+        return tweepy_apis
             
 def _get_banner():
     return '''
