@@ -115,7 +115,7 @@ def main():
                 
             list_vic.pop(int(res))
 
-            soldier = Soldier(api, victim_list, log, prefix, args.out)
+            soldier = Soldier(api, victim_list, log, prefix, args.out, keys)
             soldier.daemon = True
             threads.append(soldier)
             
