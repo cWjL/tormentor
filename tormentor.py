@@ -276,8 +276,8 @@ class Soldier(Thread):
                 try:
                     for tweet in self.api.user_timeline(screen_name=vic.name, count=1):
                         # Find latest tweet that is less than five minutes old
-                        if ((time.time() - (tweet.created_at - datetime.datetime(1970,1,1)).total_seconds() < 300) and
-                            (tweet.id not in self.tweet_ids) and not tweet.retweeted):
+                        if not tweet.retweeted and ((time.time() - (tweet.created_at - datetime.datetime(1970,1,1)).total_seconds() < 300) and
+                            (tweet.id not in self.tweet_ids)):
                             self.tweet_ids.append(tweet.id)
                             reply = vic.wordlist.pop(0)
                             if vic.media is not None:
