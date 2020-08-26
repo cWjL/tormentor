@@ -277,7 +277,7 @@ class Soldier(Thread):
                     for tweet in self.api.user_timeline(screen_name=vic.name, count=1):
                         # Find latest tweet that is less than five minutes old
                         if ((time.time() - (tweet.created_at - datetime.datetime(1970,1,1)).total_seconds() < 300) and
-                            (tweet.id not in self.tweet_ids)):
+                            (tweet.id not in self.tweet_ids) and not tweet.retweeted):
                             self.tweet_ids.append(tweet.id)
                             reply = vic.wordlist.pop(0)
                             if vic.media is not None:
@@ -300,7 +300,7 @@ class Soldier(Thread):
                     elif e.api_code == 64:
                         print(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
                         log.error(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
-                    elif e.api_code == 110:
+                    elif "HTTPSConnectionPool" in str(e):
                         if reconnects < 3:
                             print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ: "+str(e))
                             log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ: "+str(e))
