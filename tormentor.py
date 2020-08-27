@@ -296,33 +296,33 @@ class Soldier(Thread):
                 except tweepy.TweepError as e: # Catch error and return
                     if e.api_code == 88:
                         print(self.prefix[0]+self.api.me().screen_name+" [Rate limited] Taking a 15 second break "+str(e))
-                        log.error(self.prefix[0]+self.api.me().screen_name+" [Rate limited] Taking a 15 second break "+str(e))
+                        self.log.error(self.prefix[0]+self.api.me().screen_name+" [Rate limited] Taking a 15 second break "+str(e))
                         time.sleep(15)
                         continue
                     elif e.api_code == 64:
                         print(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
-                        log.error(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
+                        self.log.error(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
                     elif "HTTPSConnectionPool" in str(e):
                         if reconnects < 3:
                             print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ: "+str(e))
-                            log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ: "+str(e))
+                            self.log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ: "+str(e))
                             time.sleep(5)
                             self.api = self._get_twitter_api(self.keys)
                             reconnects += 1
                             continue
                         else:
                             print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Exceeded reconnect limit. Aborting: "+str(e))
-                            log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Exceeded reconnect limit. Aborting: "+str(e))
+                            self.log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Exceeded reconnect limit. Aborting: "+str(e))
                     elif e.api_code == 136:
                         print(self.prefix[0]+self.api.me().screen_name+" [Blocked] "+str(e))
-                        log.error(self.prefix[0]+self.api.me().screen_name+" [Blocked] "+str(e))
+                        self.log.error(self.prefix[0]+self.api.me().screen_name+" [Blocked] "+str(e))
                     elif e.api_code == 186:
                         print(self.prefix[0]+self.api.me().screen_name+" [Tweet too Long] Skipping line and continuing: "+str(e))
-                        log.error(self.prefix[0]+self.api.me().screen_name+" [Tweet too Long] Skipping line and continuing: "+str(e))
+                        self.log.error(self.prefix[0]+self.api.me().screen_name+" [Tweet too Long] Skipping line and continuing: "+str(e))
                         continue
                     elif e.api_code == 187:
                         print(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet]. Fix wordlist. Aborting")
-                        log.error(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet] "+str(e))  
+                        self.log.error(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet] "+str(e))  
                     elif e.api_code == 503 or e.api_code == 130:
                         print(self.prefix[0]+"Over capacity - taking a break and trying again.: "+str(e))
                         self.log.info("Over capacity - taking a break and trying again.: "+str(e))
