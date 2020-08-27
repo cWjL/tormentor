@@ -276,21 +276,23 @@ class Soldier(Thread):
                 try:
                     for tweet in self.api.user_timeline(screen_name=vic.name, count=1):
                         # Find latest tweet that is less than five minutes old
-                        if not tweet.retweeted and ((time.time() - (tweet.created_at - datetime.datetime(1970,1,1)).total_seconds() < 300) and
+                        if ((time.time() - (tweet.created_at - datetime.datetime(1970,1,1)).total_seconds() < 300) and
                             (tweet.id not in self.tweet_ids)):
-                            self.tweet_ids.append(tweet.id)
-                            reply = vic.wordlist.pop(0)
-                            if vic.media is not None:
-                                media = vic.media.pop(0)
-                                self.api.update_with_media(media, vic.name+" "+reply, in_reply_to_status_id=tweet.id)
-                                if self.stdout:
-                                    print(self.prefix[1]+"Reply: "+reply+" sent to: "+vic.name+" with file: "+str(media))
-                                self.log.info("Reply: "+reply+" sent to: "+vic.name+" with file: "+str(media))
-                            else:
-                                self.api.update_status(vic.name+" "+reply, in_reply_to_status_id=tweet.id)
-                                if self.stdout:
-                                    print(self.prefix[1]+"Reply: "+reply+" sent to: "+vic.name)
-                                self.log.info("Reply: "+reply+" sent to: "+vic.name)
+                            # Make sure it's not a retweet
+                            if (not tweet.retweeted) and ('RT @' not in tweet.text):
+                                self.tweet_ids.append(tweet.id)
+                                reply = vic.wordlist.pop(0)
+                                if vic.media is not None:
+                                    media = vic.media.pop(0)
+                                    self.api.update_with_media(media, vic.name+" "+reply, in_reply_to_status_id=tweet.id)
+                                    if self.stdout:
+                                        print(self.prefix[1]+"Reply: "+reply+" sent to: "+vic.name+" with file: "+str(media))
+                                    self.log.info("Reply: "+reply+" sent to: "+vic.name+" with file: "+str(media))
+                                else:
+                                    self.api.update_status(vic.name+" "+reply, in_reply_to_status_id=tweet.id)
+                                    if self.stdout:
+                                        print(self.prefix[1]+"Reply: "+reply+" sent to: "+vic.name)
+                                    self.log.info("Reply: "+reply+" sent to: "+vic.name)
                 except tweepy.TweepError as e: # Catch error and return
                     if e.api_code == 88:
                         print(self.prefix[0]+self.api.me().screen_name+" [Rate limited] Taking a 15 second break "+str(e))
