@@ -347,12 +347,12 @@ class Soldier(Thread):
                 except OSError as e:
                     if wifi < 3:
                         print(self.prefix[0]+"Network error, taking a timeout to see if it comes back.")
-                        self.log.info("Network error, taking a timeout to see if it comes back.")
+                        self.log.info("Network error, taking a timeout to see if it comes back: "+str(e))
                         time.sleep(60)
                         wifi += 1
                     else:
                         print(self.prefix[0]+"Network is dead. I'm out")
-                        self.log.info("Network error.  It's not coming back.  Killing thread")
+                        self.log.info("Network error.  It's not coming back.  Killing thread: "+str(e))
                         return
                 except KeyboardInterrupt:
                     return
