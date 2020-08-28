@@ -345,7 +345,7 @@ class Soldier(Thread):
                         self.log.info("Refreshing "+vic.name+" wordlist and restarting")
                         continue
                 except OSError as e:
-                    if wifi < 3
+                    if wifi < 3:
                         print("Network error, taking a timeout to see if it comes back.")
                         self.log.info("Network error, taking a timeout to see if it comes back.")
                         time.sleep(60)
