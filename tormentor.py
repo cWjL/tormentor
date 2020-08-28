@@ -271,6 +271,7 @@ class Soldier(Thread):
         '''
         self.log.info(self.api.me().screen_name+" thread started")
         reconnects = 0
+        wifi = 0
         while True:
             for vic in self.vic_list:
                 try:
@@ -343,6 +344,16 @@ class Soldier(Thread):
                         print(self.prefix[0]+"Refreshing "+vic.name+" wordlist")
                         self.log.info("Refreshing "+vic.name+" wordlist and restarting")
                         continue
+                except OSError as e:
+                    if wifi < 3
+                        print("Network error, taking a timeout to see if it comes back.")
+                        self.log.info("Network error, taking a timeout to see if it comes back.")
+                        time.sleep(60)
+                        wifi += 1
+                    else:
+                        print("Network is dead. I'm out")
+                        self.log.info("Network error.  It's not coming back.  Killing thread")
+                        return
                 except KeyboardInterrupt:
                     return
 
