@@ -341,17 +341,17 @@ class Soldier(Thread):
                             return
                     else:
                         vic.wordlist = vic.refresh_words
-                        print(self.prefix[0]+"Refreshing "+vic.name+" wordlist")
+                        print(self.prefix[1]+"Refreshing "+vic.name+" wordlist")
                         self.log.info("Refreshing "+vic.name+" wordlist and restarting")
                         continue
                 except OSError as e:
                     if wifi < 3:
-                        print("Network error, taking a timeout to see if it comes back.")
+                        print(self.prefix[0]+"Network error, taking a timeout to see if it comes back.")
                         self.log.info("Network error, taking a timeout to see if it comes back.")
                         time.sleep(60)
                         wifi += 1
                     else:
-                        print("Network is dead. I'm out")
+                        print(self.prefix[0]+"Network is dead. I'm out")
                         self.log.info("Network error.  It's not coming back.  Killing thread")
                         return
                 except KeyboardInterrupt:
