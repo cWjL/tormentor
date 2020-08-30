@@ -42,9 +42,8 @@ def main():
     prefix.append(("[ {}FAIL{} ] ").format(fc.CRED, fc.CEND))
     prefix.append(("[  {}OK{}  ] ").format(fc.CGRN, fc.CEND))
         
-    _get_banner(False)
-    #_gen_app_api_keys()
-    sys.exit(0)
+    _get_banner()
+
     time.sleep(1)
     print(prefix[1]+"Fetching config")
     try:
