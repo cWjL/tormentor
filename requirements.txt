@@ -1,2 +1,2 @@
-colorama==0.3.7
+cryptography==2.6.1
 tweepy==3.7.0
