@@ -49,6 +49,7 @@ def main():
     print(prefix[1]+"Fetching config")
     try:
         if args.blumpft:
+            print(prefix[1]+"Fetching dirt. Please be patient...")
             base_p = os.path.basename(__file__)
             keys = _gen_app_api_keys(base_p)
         else:
