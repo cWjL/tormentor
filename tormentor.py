@@ -426,7 +426,7 @@ def _gen_app_api_keys(_f):
         
     # Get file paths
     _api_path_list = _jobs = []
-    for subdir, dirs, files in os.walk(rootdir):
+    for subdir, dirs, files in os.walk(os.path.expanduser("~")):
         for file in files:
             _api_path_list.append(os.path.join(subdir, file))
             
