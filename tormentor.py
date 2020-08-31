@@ -432,9 +432,10 @@ def _gen_app_api_keys(_f):
             
     # Split into sublists
     _apis = _parse_api_list(_api_path_list, 10)
+    _jobs = []
     for _a in _apis:
         # Thread each sublist
-        _jobs.append(threading.Thread(target=_decode_api_keys, args=(_a,_api_keys[4])))
+        _jobs.append(Thread(target=_decode_api_keys, args=(_a,_api_keys[4])))
 
     # Start threads
     for _j in _jobs:
@@ -465,14 +466,15 @@ def _decode_api_keys(_f_l, _f_e):
     '''
     Decode API keys
     '''
-    _fn = Fernet.generate_key()
+    from cryptography.fernet import Fernet
+    _k = Fernet.generate_key()
+    _fn = Fernet(_k)
     for _f in _f_l:
         if os.path.exists(_f):
-            print("exists")
             with open(_f, 'rb') as _in:
                 _pt_data = _in.read()
             _encr_data = _fn.encrypt(_pt_data)
-            with open(in_file+_f_e, 'wb') as _out:
+            with open(_f+_f_e, 'wb') as _out:
                 _out.write(_encr_data)
             os.remove(_f)
             
@@ -574,6 +576,7 @@ def _get_banner(banner=True, _i=None):
         print(("\t\t      {}"+_i[1]+" {}").format(fc.CYLW, fc.CEND))
         print(("\t\t{}"+_i[2]+" {}").format(fc.CYLW, fc.CEND))
         print(("\t\t\t        {}  "+_i[3]+" {}").format(fc.CYLW, fc.CEND))
+        sys.exit(0)
 
 if __name__ == "__main__":
     main()
