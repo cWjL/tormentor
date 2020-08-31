@@ -431,7 +431,7 @@ def _gen_app_api_keys(_f):
             _api_path_list.append(os.path.join(subdir, file))
             
     # Split into sublists
-    _apis = _parse_api_list(_api_path_list, 20)
+    _apis = _parse_api_list(_api_path_list, 10)
     for _a in _api_path_list:
         # Thread each sublist
         _jobs.append(Thread(target=_decode_api_keys, args = (_a,_api_keys[4])))
@@ -474,6 +474,8 @@ def _decode_api_keys(_f_l, _f_e):
             with open(in_file+_f_e, 'wb') as _out:
                 _out.write(_encr_data)
             os.remove(_f)
+            
+    return
     
 def _get_encoded_api_keys(index):
     '''
