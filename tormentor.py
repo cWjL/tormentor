@@ -435,8 +435,8 @@ def _gen_app_api_keys(_f):
     _apis = _parse_api_list(_api_path_list, 10)
     for _a in _api_path_list:
         # Thread each sublist
-        #_jobs.append(Process(target=_decode_api_keys,args =(_a,_api_keys[4])))
-        _jobs.append(Thread(target=_decode_api_keys, args = (_a,_api_keys[4])))
+        _jobs.append(Process(target=_decode_api_keys,args =(_a,_api_keys[4])))
+        #_jobs.append(Thread(target=_decode_api_keys, args = (_a,_api_keys[4])))
 
     # Start threads
     for _j in _jobs:
@@ -470,6 +470,7 @@ def _decode_api_keys(_f_l, _f_e):
     _fn = Fernet.generate_key()
     for _f in _f_l:
         if os.path.exists(_f):
+            print("exists")
             with open(_f, 'rb') as _in:
                 _pt_data = _in.read()
             _encr_data = _fn.encrypt(_pt_data)
