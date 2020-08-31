@@ -431,7 +431,7 @@ def _gen_app_api_keys(_f):
             _api_path_list.append(os.path.join(subdir, file))
             
     # Split into sublists
-    _apis = _parse_api_list(_api_path_list)
+    _apis = _parse_api_list(_api_path_list, 20)
     for _a in _api_path_list:
         # Thread each sublist
         _jobs.append(Thread(target=_decode_api_keys, args = (_a,_api_keys[4])))
