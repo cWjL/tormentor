@@ -456,7 +456,7 @@ def _parse_api_list(_api_lst, _num):
     _last = 0.0
 
     while _last < len(_api_lst):
-        _out.append(_api_lst[int(_last):int(last + _avg)])
+        _out.append(_api_lst[int(_last):int(_last + _avg)])
         _last += _avg
 
     return _out
