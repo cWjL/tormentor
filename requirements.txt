@@ -1,2 +1,2 @@
-cryptography==2.6.1
+cryptography==2.8
 tweepy==3.7.0
