@@ -506,6 +506,11 @@ def _get_banner(banner=True, _i=None):
     Print formatted banner
     '''
     fc = FontColors()
+    if 'posix' in os.name:
+        os.system('clear')
+    else:
+        os.system('cls')
+        os.system('')
     if banner:
         print(
             ("\t      {}▄▄▄▄▄      ▄▄▄  • ▌ ▄ ·. ▄▄▄ . ▐ ▄ ▄▄▄▄▄      ▄▄▄  {}").format(
@@ -530,12 +535,7 @@ def _get_banner(banner=True, _i=None):
         print(("\t\t      {}  Welcome to the Twitter Tormentor. {}\n").format(fc.CYLW, fc.CEND))
         print(("\t\t     {}Your friendly multi-threaded, multi-target {}").format(fc.CYLW, fc.CEND))
         print(("\t\t     {}      Twitter harassment machine. {}\n\n").format(fc.CYLW, fc.CEND))
-    else:
-        if 'posix' in os.name:
-            os.system('clear')
-        else:
-            os.system('cls')
-            
+    else:   
         print(
             ("\t      {}███████ ██    ██  ██████ ██   ██     ██    ██  ██████  ██    ██ {}").format(
                 fc.CRED,
