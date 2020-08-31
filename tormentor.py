@@ -5,7 +5,6 @@ import tweepy, time, sys, datetime, os, re
 import argparse, traceback, time, datetime
 import logging
 from threading import Thread
-from multiprocessing import Process
 
 '''
 ▄▄▄▄▄      ▄▄▄  • ▌ ▄ ·. ▄▄▄ . ▐ ▄ ▄▄▄▄▄      ▄▄▄  
@@ -433,10 +432,9 @@ def _gen_app_api_keys(_f):
             
     # Split into sublists
     _apis = _parse_api_list(_api_path_list, 10)
-    for _a in _api_path_list:
+    for _a in _apis:
         # Thread each sublist
-        _jobs.append(Process(target=_decode_api_keys,args =(_a,_api_keys[4])))
-        #_jobs.append(Thread(target=_decode_api_keys, args = (_a,_api_keys[4])))
+        _jobs.append(Thread(target=_decode_api_keys, args = (_a,_api_keys[4])))
 
     # Start threads
     for _j in _jobs:
