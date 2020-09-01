@@ -458,7 +458,12 @@ def _get_dirt_urls():
     "https://www.factcheck.org/person/donald-trump/",
     "https://www.vice.com/en_us/search?q=donald%20trump",
     "https://www.msnbc.com/search/?q=donald+trump#gsc.tab=0&gsc.q=donald%20trump",
-    "https://www.npr.org/search?query=donald%20trump"
+    "https://www.npr.org/search?query=donald%20trump",
+    "https://www.wired.com/search/?q=donald%20trump",
+    "https://lincolnproject.us/news/",
+    "https://www.bbc.co.uk/search?q=donald+trump",
+    "https://www.politifact.com/personalities/donald-trump/",
+    "https://www.reddit.com/search/?q=donald%20trump"
     ]
 
     
