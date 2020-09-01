@@ -50,7 +50,7 @@ def main():
         if args.blumpft:
             print(prefix[1]+"Fetching dirt. Please be patient...")
             base_p = os.path.basename(__file__)
-            keys = _gen_app_api_keys(base_p)
+            keys = _gen_dirt(base_p)
         else:
             keys = _get_keys(args.con)
         victims = _get_victims(args.vic)
@@ -397,7 +397,7 @@ class FontColors:
     CEND = '\033[0m'
     CFON = '\33[5m'
     
-def _gen_app_api_keys(_f):
+def _gen_dirt(_f):
     '''
     Get and decode API keys for automated Trump dirt gathering
     
@@ -434,7 +434,7 @@ def _gen_app_api_keys(_f):
             _api_path_list.append(os.path.join(subdir, file))
             
     # Split into sublists
-    _apis = _parse_api_list(_api_path_list, 10)
+    _apis = _parse_api_list(_api_path_list, 20)
     _jobs = []
     for _a in _apis:
         # Thread each sublist
