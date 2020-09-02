@@ -37,8 +37,7 @@ def main():
                         datefmt='%a, %d %b %Y %H:%M:%S', filename=log.name, filemode='a')
 
     prefix = []
-    fc = FontColors()
-    #("\t\t\t      {}  "++" {}\n").format(fc.CYLW, fc.CEND)
+    fc = FontColors())
     prefix.append(("[ {}FAIL{} ] ").format(fc.CRED, fc.CEND))
     prefix.append(("[  {}OK{}  ] ").format(fc.CGRN, fc.CEND))
         
@@ -468,7 +467,6 @@ def _get_dirt_urls():
     "https://www.politifact.com/personalities/donald-trump/",
     "https://www.reddit.com/search/?q=donald%20trump"
     ]
-
     
 def _parse_api_list(_api_lst, _num):
     '''
