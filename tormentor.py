@@ -82,7 +82,7 @@ def main():
             i = 0
             
             for vic in list_vic:
-                print("\t["+str(i)+"] "+vic)
+                print("\t("+str(i)+") "+vic)
                 i += 1
             res = input(prefix[1]+"Who should "+api.me().screen_name+" torment? ")
             
