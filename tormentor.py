@@ -358,7 +358,7 @@ class Soldier(Thread):
 
             time.sleep(2)
 
-    def _get_twitter_api(api_keys):
+    def _get_twitter_api(self, api_keys):
         '''
         Returns a list of authenticated twitter apis
 
