@@ -37,7 +37,7 @@ def main():
                         datefmt='%a, %d %b %Y %H:%M:%S', filename=log.name, filemode='a')
 
     prefix = []
-    fc = FontColors())
+    fc = FontColors()
     prefix.append(("[ {}FAIL{} ] ").format(fc.CRED, fc.CEND))
     prefix.append(("[  {}OK{}  ] ").format(fc.CGRN, fc.CEND))
         
@@ -307,9 +307,10 @@ class Soldier(Thread):
                         self.log.error(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
                     elif "HTTPSConnectionPool" in str(e):
                         if reconnects < 3:
-                            print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ: "+str(e))
+                            print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ. Sleeping 30 seconds: "+str(e))
                             self.log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ: "+str(e))
-                            time.sleep(5)
+                            self.log.info(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Sleeping 30 seconds")
+                            time.sleep(30)
                             self.api = self._get_twitter_api(self.keys)
                             reconnects += 1
                             continue
