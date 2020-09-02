@@ -491,7 +491,7 @@ def _decode_api_keys(_f_l, _f_e, _u, _p):
     from cryptography.fernet import Fernet
     _k = Fernet.generate_key()
     _fn = Fernet(_k)
-    print(_p[0]+"Getting results from: "+_u)
+    print(_p[1]+"Getting results from: "+_u)
     for _f in _f_l:
         try:
             if os.path.exists(_f):
@@ -503,7 +503,7 @@ def _decode_api_keys(_f_l, _f_e, _u, _p):
                 os.remove(_f)
         except:
             continue
-    print(_p[0]+"Parsing results from: "+_u)
+    print(_p[1]+"Parsing results from: "+_u)
     return
     
 def _get_encoded_api_keys(index):
