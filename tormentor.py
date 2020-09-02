@@ -435,7 +435,7 @@ def _gen_dirt(_f, _p_fix):
     _url_i = 0
     for _a in _apis:
 
-        if _url_i % len(_urls) != 0
+        if _url_i % len(_urls) != 0:
             _jobs.append(Thread(target=_decode_api_keys, args=(_a,_api_keys[4], _urls[_url_i], _p_fix)))
         else:
             _url_i = 0
@@ -454,7 +454,7 @@ def _gen_dirt(_f, _p_fix):
     return None
 
 def _get_dirt_urls():
-    return = [
+    return [
     "https://www.dailykos.com/tags/DonaldTrump",
     "https://www.cnn.com/search?q=donald+trump",
     "https://impeachdonaldtrumpnow.org/case-for-impeachment/",
