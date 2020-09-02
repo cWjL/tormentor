@@ -244,7 +244,7 @@ class Victim:
         self.repeat = repeat
 
     def reset_words(self):
-        self.wordlist = self.refresh_words
+        self.wordlist.extend(self.refresh_words)
         
 class Soldier(Thread):
     '''
