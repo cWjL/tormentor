@@ -326,7 +326,10 @@ class Soldier(Thread):
                         continue
                     elif e.api_code == 187:
                         print(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet]. Fix wordlist. Aborting")
-                        self.log.error(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet] "+str(e))  
+                        self.log.error(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet] "+str(e))
+                    elif e.api_code == 326:
+                        print(self.prefix[0]+self.api.me().screen_name+" [Temporarily Limited]. They figured out I'm a robot. Tell them I'm not")
+                        self.log.error(self.prefix[0]+self.api.me().screen_name+" [Temporarily Limited] "+str(e))
                     elif e.api_code == 503 or e.api_code == 130:
                         print(self.prefix[0]+"Over capacity - taking a break and trying again.: "+str(e))
                         self.log.info("Over capacity - taking a break and trying again.: "+str(e))
