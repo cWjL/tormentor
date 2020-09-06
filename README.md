@@ -23,6 +23,20 @@ The bot targets (users to respond to) must be passed at runtime using the `-v` o
 	@Victim2
 	@Victim3
 ```
+Text to tweet will be defined at runtime and must be a `.txt` file of responses, each on a separate line.  To include media in a response, you must include the file name on the respective reply line, and separate it by `::`.  The media file must be contained in the media directory supplied when asked at runtime.
+
+Media can be of any format accepted by Twitter (.png, .jpg, .gif, etc.).
+
+```
+Example line that includes media in tweet_text.txt:
+
+	media.png::This is a response that includes a media file #BotsWillDestroyHumanInteraction
+	
+Example non-media line in tweet_text.txt:
+
+	This is a #response that does not include media #ILoveBots
+```
+
 Use `-o` or `--printout` to print all bot responses to stdout.<br />
 
 **Python Version**
