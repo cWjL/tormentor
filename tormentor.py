@@ -89,14 +89,33 @@ def main():
             if int(res) >= 0 and int(res) < len(list_vic):
                 wl = input(prefix[1]+'Give me the path to '+list_vic[int(res)].strip()+' wordlist: ')
                 try:
-                    tmp_wl_txt = _get_tweet_text(wl)
+                    t_path = _get_tweet_text(wl)
                 except IOError:
                     log.error("File not found: "+wl)
                     print(prefix[0]+wl+" not found.  Try again")
                     continue
 
+                m = input(prefix[1]+'Give me the path to '+list_vic[int(res)].strip()+' media directory, or <ENTER> for none: ')
+                try:
+                    if m != "":
+                        if not os.path.isdir(m):
+                            raise IOError(m+" is not a directory")
+                        else:
+                            m_path = os.path.abspath(m)
+                            if os.name == 'posix':
+                                m_path += '/'
+                            else:
+                                m_path += '\\'
+                    else:
+                        m_path = None
+                except IOError:
+                    log.error("Files not found: "+m)
+                    print(prefix[0]+m+" not found.  Try again")
+                    continue
+
                 victim_list.append(Victim(list_vic[int(res)]))
-                victim_list[len(victim_list)-1].set_words(tmp_wl_txt)
+                victim_list[len(victim_list)-1].set_words(t_path)
+                victim_list[len(victim_list)-1].set_media(m_path)
                 
                 rep = input(prefix[1]+"Continue running this wordlist indefinitely [y/n]?: ")
                 if rep.lower() == "y" or rep.lower() == "yes":
@@ -218,6 +237,7 @@ class Victim:
     '''
     def __init__(self, name):
         self.name = name
+        self.media = None
         self.repeat = False
         
     def set_words(self, words):
@@ -226,6 +246,9 @@ class Victim:
         
     def set_repeat(self, repeat):
         self.repeat = repeat
+
+    def set_media(self, media):
+        self.media = media
 
     def reset_words(self):
         self.wordlist.extend(self.refresh_words)
@@ -274,12 +297,15 @@ class Soldier(Thread):
                                 if '::' in reply:
                                     # Media path media[0]
                                     # Reply media[1]
-                                    media = reply.split('::')
-                                    media_path = "media/"+media[0]
-                                    self.api.update_with_media(media_path, vic.name+" "+media[1], in_reply_to_status_id=tweet.id)
-                                    if self.stdout:
-                                        print(self.prefix[1]+"Reply: "+media[1]+" sent to: "+vic.name+" with file: "+media[0])
-                                    self.log.info("Reply: "+media[1]+" sent to: "+vic.name+" with file: "+media[0])
+                                    if vic.media is not None:
+                                        media = reply.split('::')
+                                        media_path = vic.media+media[0]
+                                        self.api.update_with_media(media_path, vic.name+" "+media[1], in_reply_to_status_id=tweet.id)
+                                        if self.stdout:
+                                            print(self.prefix[1]+"Reply: "+media[1]+" sent to: "+vic.name+" with file: "+media_path)
+                                        self.log.info("Reply: "+media[1]+" sent to: "+vic.name+" with file: "+media_path)
+                                    else:
+                                        raise ValueError("No media directory defined for "+vic.name)
                                 else:
                                     self.api.update_status(vic.name+" "+reply, in_reply_to_status_id=tweet.id)
                                     if self.stdout:
@@ -344,8 +370,8 @@ class Soldier(Thread):
                     print(self.prefix[0]+"User interrupt")
                     self.log.info("User interrupt")
                     return
-                except FileNotFoundError as e:
-                    print(self.prefix[0]+"Media file not found. Skipping it and moving on")
+                except ValueError as e:
+                    print(self.prefix[0]+"Media directory not defined. Skipping this line and moving on")
                     self.log.error("File not found: "+str(e))
                     continue
                 except Exception as e:
