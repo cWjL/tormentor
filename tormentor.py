@@ -94,20 +94,9 @@ def main():
                     log.error("File not found: "+wl)
                     print(prefix[0]+wl+" not found.  Try again")
                     continue
-                m = input(prefix[1]+'Give me the path to '+list_vic[int(res)].strip()+' media directory, or <ENTER> for none: ')
-                try:
-                    if m != "":
-                        tmp_m_txt = _get_media_files(m)
-                    else:
-                        tmp_m_txt = None
-                except IOError:
-                    log.error("Files not found: "+m)
-                    print(prefix[0]+m+" not found.  Try again")
-                    continue
-                    
-                victim_list.append(Victim(list_vic[int(res)]))                
+
+                victim_list.append(Victim(list_vic[int(res)]))
                 victim_list[len(victim_list)-1].set_words(tmp_wl_txt)
-                victim_list[len(victim_list)-1].set_media(tmp_m_txt)
                 
                 rep = input(prefix[1]+"Continue running this wordlist indefinitely [y/n]?: ")
                 if rep.lower() == "y" or rep.lower() == "yes":
@@ -229,15 +218,11 @@ class Victim:
     '''
     def __init__(self, name):
         self.name = name
-        self.media = None
         self.repeat = False
         
     def set_words(self, words):
         self.wordlist = words
         self.refresh_words = words
-        
-    def set_media(self, media):
-        self.media = media
         
     def set_repeat(self, repeat):
         self.repeat = repeat
@@ -285,12 +270,16 @@ class Soldier(Thread):
                             if (not tweet.retweeted) and ('RT @' not in tweet.text):
                                 self.tweet_ids.append(tweet.id)
                                 reply = vic.wordlist.pop(0)
-                                if vic.media is not None:
-                                    media = vic.media.pop(0)
-                                    self.api.update_with_media(media, vic.name+" "+reply, in_reply_to_status_id=tweet.id)
+                                # Check for media tag in reply
+                                if '::' in reply:
+                                    # Media path media[0]
+                                    # Reply media[1]
+                                    media = reply.split('::')
+                                    media_path = "media/"+media[0]
+                                    self.api.update_with_media(media_path, vic.name+" "+media[1], in_reply_to_status_id=tweet.id)
                                     if self.stdout:
-                                        print(self.prefix[1]+"Reply: "+reply+" sent to: "+vic.name+" with file: "+str(media))
-                                    self.log.info("Reply: "+reply+" sent to: "+vic.name+" with file: "+str(media))
+                                        print(self.prefix[1]+"Reply: "+media[1]+" sent to: "+vic.name+" with file: "+media[0])
+                                    self.log.info("Reply: "+media[1]+" sent to: "+vic.name+" with file: "+media[0])
                                 else:
                                     self.api.update_status(vic.name+" "+reply, in_reply_to_status_id=tweet.id)
                                     if self.stdout:
@@ -355,6 +344,10 @@ class Soldier(Thread):
                     print(self.prefix[0]+"User interrupt")
                     self.log.info("User interrupt")
                     return
+                except FileNotFoundError as e:
+                    print(self.prefix[0]+"Media file not found. Skipping it and moving on")
+                    self.log.error("File not found: "+str(e))
+                    continue
                 except Exception as e:
                     print(self.prefix[0]+"Something has gone terribly wrong. Check log")
                     self.log.error("Other error: "+str(e))
