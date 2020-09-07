@@ -90,6 +90,7 @@ def main():
                 wl = input(prefix[1]+'Give me the path to '+list_vic[int(res)].strip()+' wordlist: ')
                 try:
                     t_path = _get_tweet_text(wl)
+                    b_path = _get_tweet_text(wl)
                 except IOError:
                     log.error("File not found: "+wl)
                     print(prefix[0]+wl+" not found.  Try again")
@@ -120,6 +121,7 @@ def main():
                 rep = input(prefix[1]+"Continue running this wordlist indefinitely [y/n]?: ")
                 if rep.lower() == "y" or rep.lower() == "yes":
                     victim_list[len(victim_list)-1].set_repeat(True)
+                    victim_list[len(victim_list)-1].set_refresh_words(b_path)
                 
             list_vic.pop(int(res))
 
@@ -242,13 +244,15 @@ class Victim:
         
     def set_words(self, words):
         self.wordlist = words
-        self.refresh_words = words
-        
+
     def set_repeat(self, repeat):
         self.repeat = repeat
 
     def set_media(self, media):
         self.media = media
+
+    def set_refresh_words(self, words):
+        self.refresh_words = words
 
     def reset_words(self):
         self.wordlist.extend(self.refresh_words)
@@ -291,26 +295,29 @@ class Soldier(Thread):
                             (tweet.id not in self.tweet_ids)):
                             # Make sure it's not a retweet
                             if (not tweet.retweeted) and ('RT @' not in tweet.text):
-                                self.tweet_ids.append(tweet.id)
-                                reply = vic.wordlist.pop(0)
-                                # Check for media tag in reply
-                                if '::' in reply:
-                                    # Media path media[0]
-                                    # Reply media[1]
-                                    if vic.media is not None:
-                                        media = reply.split('::')
-                                        media_path = vic.media+media[0]
-                                        self.api.update_with_media(media_path, vic.name+" "+media[1], in_reply_to_status_id=tweet.id)
-                                        if self.stdout:
-                                            print(self.prefix[1]+"Reply: "+media[1]+" sent to: "+vic.name+" with file: "+media_path)
-                                        self.log.info("Reply: "+media[1]+" sent to: "+vic.name+" with file: "+media_path)
+                                if len(vic.wordlist) > 0:
+                                    self.tweet_ids.append(tweet.id)
+                                    reply = vic.wordlist.pop(0)
+                                    # Check for media tag in reply
+                                    if '::' in reply:
+                                        # Media path media[0]
+                                        # Reply media[1]
+                                        if vic.media is not None:
+                                            media = reply.split('::')
+                                            media_path = vic.media+media[0]
+                                            self.api.update_with_media(media_path, vic.name+" "+media[1], in_reply_to_status_id=tweet.id)
+                                            if self.stdout:
+                                                print(self.prefix[1]+"Reply: "+media[1]+" sent to: "+vic.name+" with file: "+media_path)
+                                            self.log.info("Reply: "+media[1]+" sent to: "+vic.name+" with file: "+media_path)
+                                        else:
+                                            raise ValueError("No media directory defined for "+vic.name)
                                     else:
-                                        raise ValueError("No media directory defined for "+vic.name)
+                                        self.api.update_status(vic.name+" "+reply, in_reply_to_status_id=tweet.id)
+                                        if self.stdout:
+                                            print(self.prefix[1]+"Reply: "+reply+" sent to: "+vic.name)
+                                        self.log.info("Reply: "+reply+" sent to: "+vic.name)
                                 else:
-                                    self.api.update_status(vic.name+" "+reply, in_reply_to_status_id=tweet.id)
-                                    if self.stdout:
-                                        print(self.prefix[1]+"Reply: "+reply+" sent to: "+vic.name)
-                                    self.log.info("Reply: "+reply+" sent to: "+vic.name)
+                                    raise IndexError
                 except tweepy.TweepError as e: # Catch error and return
                     if e.api_code == 88:
                         print(self.prefix[0]+self.api.me().screen_name+" [Rate limited] Taking a 15 second break")
