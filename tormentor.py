@@ -362,9 +362,9 @@ class Soldier(Thread):
                         if len(vic_list) == 0:
                             return
                     else:
-                        vic.reset_words()
                         print(self.prefix[1]+"Refreshing "+vic.name+" wordlist")
                         self.log.info("Refreshing "+vic.name+" wordlist and restarting")
+                        vic.reset_words()
                         continue
                 except KeyboardInterrupt:
                     print(self.prefix[0]+"User interrupt")
