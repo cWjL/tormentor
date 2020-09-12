@@ -327,6 +327,7 @@ class Soldier(Thread):
                     elif e.api_code == 64:
                         print(self.prefix[0]+self.api.me().screen_name+" [Suspended] Aborting")
                         self.log.error(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
+                        return
                     elif "HTTPSConnectionPool" in str(e):
                         if reconnects < 3:
                             print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ. Sleeping 30 seconds")
@@ -339,9 +340,11 @@ class Soldier(Thread):
                         else:
                             print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Exceeded reconnect limit. Aborting")
                             self.log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Exceeded reconnect limit. Aborting: "+str(e))
+                            return
                     elif e.api_code == 136:
                         print(self.prefix[0]+self.api.me().screen_name+" [Blocked] Target victim has blocked me. Aborting")
                         self.log.error(self.prefix[0]+self.api.me().screen_name+" [Blocked] "+str(e))
+                        return
                     elif e.api_code == 186:
                         print(self.prefix[0]+self.api.me().screen_name+" [Tweet too Long] Skipping line and continuing")
                         self.log.error(self.prefix[0]+self.api.me().screen_name+" [Tweet too Long] Skipping line and continuing: "+str(e))
@@ -349,9 +352,11 @@ class Soldier(Thread):
                     elif e.api_code == 187:
                         print(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet]. Fix wordlist. Aborting")
                         self.log.error(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet] "+str(e))
+                        return
                     elif e.api_code == 326:
                         print(self.prefix[0]+self.api.me().screen_name+" [Temporarily Limited]. They figured out I'm a robot. Tell them I'm not")
                         self.log.error(self.prefix[0]+self.api.me().screen_name+" [Temporarily Limited] "+str(e))
+                        return
                     elif e.api_code == 503 or e.api_code == 130:
                         print(self.prefix[0]+"[Over capacity] Taking a break and trying again.")
                         self.log.info("[Over capacity] Taking a break and trying again.: "+str(e))
@@ -360,7 +365,7 @@ class Soldier(Thread):
                     else:
                         print(self.prefix[0]+self.api.me().screen_name+" [Undefined Tweepy Error] Check log for details. Aborting")
                         self.log.info("[Undefined Tweepy Error] "+str(e))
-                    return
+                        return
                 except IndexError:
                     print(self.prefix[0]+vic.name+" is out of text to tweet")
                     self.log.info(vic.name+" Wordlist empty.")
