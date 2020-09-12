@@ -307,14 +307,14 @@ class Soldier(Thread):
                                             media_path = vic.media+media[0]
                                             self.api.update_with_media(media_path, vic.name+" "+media[1], in_reply_to_status_id=tweet.id)
                                             if self.stdout:
-                                                print(self.prefix[1]+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+" Reply: "+media[1]+" sent to: "+vic.name+" with file: "+media_path)
+                                                print(self.prefix[1]+datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")+" Reply: "+media[1]+" sent to: "+vic.name+" with file: "+media_path)
                                             self.log.info("Reply: "+media[1]+" sent to: "+vic.name+" with file: "+media_path)
                                         else:
                                             raise ValueError("No media directory defined for "+vic.name)
                                     else:
                                         self.api.update_status(vic.name+" "+reply, in_reply_to_status_id=tweet.id)
                                         if self.stdout:
-                                            print(self.prefix[1]+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+" Reply: "+reply+" sent to: "+vic.name)
+                                            print(self.prefix[1]+datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")+" Reply: "+reply+" sent to: "+vic.name)
                                         self.log.info("Reply: "+reply+" sent to: "+vic.name)
                                 else:
                                     raise IndexError
