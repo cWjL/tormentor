@@ -1,5 +1,0 @@
-[
-{   "ip": "173.201.249.2",   "timestamp": "1600788948", "ports": [ {"port": 443, "proto": "tcp", "status": "open", "reason": "syn-ack", "ttl": 34} ] }
-,
-{   "ip": "173.201.249.5",   "timestamp": "1600789007", "ports": [ {"port": 443, "proto": "tcp", "status": "open", "reason": "syn-ack", "ttl": 34} ] }
-]
