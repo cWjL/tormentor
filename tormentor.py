@@ -327,6 +327,7 @@ class Soldier(Thread):
                     elif e.api_code == 64:
                         print(self.prefix[0]+self.api.me().screen_name+" [Suspended] Aborting")
                         self.log.error(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
+                        print(self.prefix[1]+vic.name+" tormentor exited")
                         return
                     elif "HTTPSConnectionPool" in str(e):
                         if reconnects < 3:
@@ -340,10 +341,12 @@ class Soldier(Thread):
                         else:
                             print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Exceeded reconnect limit. Aborting")
                             self.log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Exceeded reconnect limit. Aborting: "+str(e))
+                            print(self.prefix[1]+vic.name+" tormentor exited")
                             return
                     elif e.api_code == 136:
                         print(self.prefix[0]+self.api.me().screen_name+" [Blocked] Target victim has blocked me. Aborting")
                         self.log.error(self.prefix[0]+self.api.me().screen_name+" [Blocked] "+str(e))
+                        print(self.prefix[1]+vic.name+" tormentor exited")
                         return
                     elif e.api_code == 186:
                         print(self.prefix[0]+self.api.me().screen_name+" [Tweet too Long] Skipping line and continuing")
@@ -352,10 +355,12 @@ class Soldier(Thread):
                     elif e.api_code == 187:
                         print(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet]. Fix wordlist. Aborting")
                         self.log.error(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet] "+str(e))
+                        print(self.prefix[1]+vic.name+" tormentor exited")
                         return
                     elif e.api_code == 326:
                         print(self.prefix[0]+self.api.me().screen_name+" [Temporarily Limited]. They figured out I'm a robot. Tell them I'm not")
                         self.log.error(self.prefix[0]+self.api.me().screen_name+" [Temporarily Limited] "+str(e))
+                        print(self.prefix[1]+vic.name+" tormentor exited")
                         return
                     elif e.api_code == 503 or e.api_code == 130:
                         print(self.prefix[0]+"[Over capacity] Taking a break and trying again.")
@@ -365,6 +370,7 @@ class Soldier(Thread):
                     else:
                         print(self.prefix[0]+self.api.me().screen_name+" [Undefined Tweepy Error] Check log for details. Aborting")
                         self.log.info("[Undefined Tweepy Error] "+str(e))
+                        print(self.prefix[1]+vic.name+" tormentor exited")
                         return
                 except IndexError:
                     print(self.prefix[0]+vic.name+" is out of text to tweet")
@@ -372,6 +378,7 @@ class Soldier(Thread):
                     if vic.repeat == False:
                         self.vic_list.pop(self.vic_list.index(vic.name))
                         if len(vic_list) == 0:
+                            print(self.prefix[1]+vic.name+" tormentor exited")
                             return
                     else:
                         print(self.prefix[1]+"Refreshing "+vic.name+" wordlist")
@@ -381,14 +388,16 @@ class Soldier(Thread):
                 except KeyboardInterrupt:
                     print(self.prefix[0]+"User interrupt")
                     self.log.info("User interrupt")
+                    print(self.prefix[1]+vic.name+" tormentor exited")
                     return
                 except ValueError as e:
                     print(self.prefix[0]+"Media directory not defined. Skipping this line and moving on")
                     self.log.error("File not found: "+str(e))
                     continue
                 except Exception as e:
-                    print(self.prefix[0]+"Something has gone terribly wrong. Check log")
+                    print(self.prefix[0]+"Something has gone terribly wrong with "+vic.name+" tormentor. Check log")
                     self.log.error("Other error: "+str(e))
+                    print(self.prefix[1]+vic.name+" tormentor exited")
                     return
 
             time.sleep(2)
