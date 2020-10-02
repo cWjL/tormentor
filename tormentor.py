@@ -124,9 +124,6 @@ def main():
                     victim_list[len(victim_list)-1].set_refresh_words(b_path)
                 
             list_vic.pop(int(res))
-            for vic in victim_list:
-                print(vic.name)
-            sys.exit(0)
 
             soldier = Soldier(api, victim_list, log, prefix, args.out, keys)
             soldier.daemon = True
@@ -378,15 +375,15 @@ class Soldier(Thread):
                 except IndexError:
                     print(self.prefix[0]+vic.name+" is out of text to tweet")
                     self.log.info(vic.name+" Wordlist empty.")
-                    if vic.repeat == False:
-                        rmv = self.vic_list.index(vic.name)
-                        self.vic_list.pop(rmv)
+                    if not vic.repeat:
+                        self.vic_list.pop(self.vic_list.index(vic))
                         if len(vic_list) == 0:
                             print(self.prefix[1]+self.api.me()+" tormentor exited")
                             return
                         else:
                             print(self.prefix[1]+vic.name+" torment complete")
                             self.log.info(vic.name+" torment complete")
+                            continue
                     else:
                         print(self.prefix[1]+"Refreshing "+vic.name+" wordlist")
                         self.log.info("Refreshing "+vic.name+" wordlist and restarting")
