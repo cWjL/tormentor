@@ -332,8 +332,7 @@ class Soldier(Thread):
                     elif "HTTPSConnectionPool" in str(e):
                         if reconnects < 3:
                             print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ. Sleeping 30 seconds")
-                            self.log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ: "+str(e))
-                            self.log.info(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Sleeping 30 seconds")
+                            self.log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ, Sleeping 30 seconds"+str(e))
                             time.sleep(30)
                             self.api = self._get_twitter_api(self.keys)
                             reconnects += 1
