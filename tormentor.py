@@ -124,7 +124,8 @@ def main():
                     victim_list[len(victim_list)-1].set_refresh_words(b_path)
                 
             list_vic.pop(int(res))
-            print(victim_list)
+            for vic in victim_list:
+                print(vic.name)
             sys.exit(0)
 
             soldier = Soldier(api, victim_list, log, prefix, args.out, keys)
