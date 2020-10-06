@@ -343,7 +343,7 @@ class Soldier(Thread):
                             print(self.prefix[1]+self.api.me().screen_name+" tormentor exited")
                             return
                     elif e.api_code == 131:
-                        print(self.prefix[0]"[Twitter Error] Taking a break and trying again.")
+                        print(self.prefix[0]+"[Twitter Error] Taking a break and trying again.")
                         self.log.error(self.api.me().screen_name+"[Twitter Error] Taking a break and trying again."+str(e))
                         time.sleep(120)
                         continue
