@@ -321,44 +321,49 @@ class Soldier(Thread):
                 except tweepy.TweepError as e: # Catch error and return
                     if e.api_code == 88:
                         print(self.prefix[0]+self.api.me().screen_name+" [Rate limited] Taking a 15 second break")
-                        self.log.error(self.prefix[0]+self.api.me().screen_name+" [Rate limited] Taking a 15 second break "+str(e))
+                        self.log.error(self.api.me().screen_name+" [Rate limited] Taking a 15 second break "+str(e))
                         time.sleep(15)
                         continue
                     elif e.api_code == 64:
                         print(self.prefix[0]+self.api.me().screen_name+" [Suspended] Aborting")
-                        self.log.error(self.prefix[0]+self.api.me().screen_name+" [Suspended] "+str(e))
+                        self.log.error(self.api.me().screen_name+" [Suspended] "+str(e))
                         print(self.prefix[1]+self.api.me().screen_name+" tormentor exited")
                         return
                     elif "HTTPSConnectionPool" in str(e):
                         if reconnects < 3:
                             print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ. Sleeping 30 seconds")
-                            self.log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ, Sleeping 30 seconds"+str(e))
+                            self.log.error(self.api.me().screen_name+" [HTTPS Error] Respawning API OBJ, Sleeping 30 seconds"+str(e))
                             time.sleep(30)
                             self.api = self._get_twitter_api(self.keys)
                             reconnects += 1
                             continue
                         else:
                             print(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Exceeded reconnect limit. Aborting")
-                            self.log.error(self.prefix[0]+self.api.me().screen_name+" [HTTPS Error] Exceeded reconnect limit. Aborting: "+str(e))
+                            self.log.error(self.api.me().screen_name+" [HTTPS Error] Exceeded reconnect limit. Aborting: "+str(e))
                             print(self.prefix[1]+self.api.me().screen_name+" tormentor exited")
                             return
+                    elif e.api_code == 131:
+                        print(self.prefix[0]"[Twitter Error] Taking a break and trying again.")
+                        self.log.error(self.api.me().screen_name+"[Twitter Error] Taking a break and trying again."+str(e))
+                        time.sleep(120)
+                        continue
                     elif e.api_code == 136:
                         print(self.prefix[0]+self.api.me().screen_name+" [Blocked] Target victim has blocked me. Aborting")
-                        self.log.error(self.prefix[0]+self.api.me().screen_name+" [Blocked] "+str(e))
+                        self.log.error(self.api.me().screen_name+" [Blocked] "+str(e))
                         print(self.prefix[1]+self.api.me().screen_name+" tormentor exited")
                         return
                     elif e.api_code == 186:
                         print(self.prefix[0]+self.api.me().screen_name+" [Tweet too Long] Skipping line and continuing")
-                        self.log.error(self.prefix[0]+self.api.me().screen_name+" [Tweet too Long] Skipping line and continuing: "+str(e))
+                        self.log.error(self.api.me().screen_name+" [Tweet too Long] Skipping line and continuing: "+str(e))
                         continue
                     elif e.api_code == 187:
                         print(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet]. Fix wordlist. Aborting")
-                        self.log.error(self.prefix[0]+self.api.me().screen_name+" [Duplicate Tweet] "+str(e))
+                        self.log.error(self.api.me().screen_name+" [Duplicate Tweet] "+str(e))
                         print(self.prefix[1]+self.api.me().screen_name+" tormentor exited")
                         return
                     elif e.api_code == 326:
                         print(self.prefix[0]+self.api.me().screen_name+" [Temporarily Limited]. They figured out I'm a robot. Tell them I'm not")
-                        self.log.error(self.prefix[0]+self.api.me().screen_name+" [Temporarily Limited] "+str(e))
+                        self.log.error(self.api.me().screen_name+" [Temporarily Limited] "+str(e))
                         print(self.prefix[1]+self.api.me().screen_name+" tormentor exited")
                         return
                     elif e.api_code == 503 or e.api_code == 130:
