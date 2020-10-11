@@ -372,10 +372,15 @@ class Soldier(Thread):
                         time.sleep(3)
                         continue
                     else:
-                        print(self.prefix[0]+self.api.me().screen_name+" [Undefined Tweepy Error] Check log for details. Aborting")
-                        self.log.info("[Undefined Tweepy Error] "+str(e))
-                        print(self.prefix[1]+self.api.me().screen_name+" tormentor exited")
-                        return
+                        if "File is too big" in str(e):
+                            print(self.prefix[0]+"[File too big] "+self.api.me().screen_name+" File: "+media_path+". Skipping this file and continuing")
+                            self.log.error("[File too big] "+media_path+" too big. Skipping this file and continuing")
+                            continue
+                        else:
+                            print(self.prefix[0]+self.api.me().screen_name+" [Undefined Tweepy Error] Check log for details. Aborting")
+                            self.log.error("[Undefined Tweepy Error] "+str(e))
+                            print(self.prefix[1]+self.api.me().screen_name+" tormentor exited")
+                            return
                 except IndexError:
                     print(self.prefix[0]+vic.name+" is out of text to tweet")
                     self.log.info(vic.name+" Wordlist empty.")
