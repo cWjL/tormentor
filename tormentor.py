@@ -305,6 +305,8 @@ class Soldier(Thread):
                                         if vic.media is not None:
                                             media = reply.split('::')
                                             media_path = vic.media+media[0]
+                                            if not os.path.isfile(media_path):
+                                                raise ValueError(media_path)
                                             self.api.update_with_media(media_path, vic.name+" "+media[1], in_reply_to_status_id=tweet.id)
                                             if self.stdout:
                                                 print(self.prefix[1]+datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")+" Reply: "+media[1]+" sent to: "+vic.name+" with file: "+media_path)
@@ -404,7 +406,7 @@ class Soldier(Thread):
                     print(self.prefix[1]+self.api.me().screen_name+" tormentor exited")
                     return
                 except ValueError as e:
-                    print(self.prefix[0]+"Media directory not defined. Skipping this line and moving on")
+                    print(self.prefix[0]+"File not found. Skipping this line and moving on")
                     self.log.error("File not found: "+str(e))
                     continue
                 except Exception as e:
