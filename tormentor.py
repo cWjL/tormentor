@@ -386,7 +386,7 @@ class Soldier(Thread):
                     self.log.info(vic.name+" Wordlist empty.")
                     if not vic.repeat:
                         self.vic_list.pop(self.vic_list.index(vic))
-                        if len(vic_list) == 0:
+                        if len(self.vic_list) == 0:
                             print(self.prefix[1]+self.api.me().screen_name+" tormentor exited")
                             return
                         else:
