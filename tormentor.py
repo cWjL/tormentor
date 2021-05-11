@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import tweepy, time, sys, datetime
-import argparse, traceback, os, re
+import tweepy
+import time
+import sys
+import datetime
+import argparse
+import traceback
+import os
+import re
 import logging
 from threading import Thread
 
@@ -19,22 +25,58 @@ from threading import Thread
 '''
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-o','--printout',action='store_true',dest='out',help='Print all activity to stdout')
-    parser.add_argument('-t', '--torment-trump',action='store_true',dest='blumpft',help='Fetch dirt on Trump and populate \'words\' file with it')
+    parser.add_argument(
+    					'-o',
+    					'--printout',
+    					action='store_true',
+    					dest='out',
+    					help='Print all activity to stdout'
+    					)
+    parser.add_argument(
+    					'-t',
+    					'--torment-politician',
+    					action='store',
+    					dest='poli',
+    					help='Fetch dirt on the poilitician and populate \'words\' file with it'
+    					)
     reqd = parser.add_argument_group('required arguments')
-    reqd.add_argument('-c','--config',action='store',dest='con',help='Path to config file',required=True)
-    reqd.add_argument('-v', '--victim',action='store',dest='vic',help='Path to username file',required=True)
+    reqd.add_argument(
+    					'-c',
+    					'--config',
+    					action='store',
+    					dest='con',
+    					help='Path to config file',
+    					required=True
+    					)
+    reqd.add_argument(
+    					'-v',
+    					'--victim',
+    					action='store',
+    					dest='vic',
+    					help='Path to username file',
+    					required=True
+    					)
     args = parser.parse_args()
     
     if not os.path.isdir('logs/'):
         os.mkdir('logs/')
         log = logging.getLogger(__name__)
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s',
-                        datefmt='%a, %d %b %Y %H:%M:%S', filename='logs/torment.log', filemode='w')
+        logging.basicConfig(
+        					level=logging.INFO,
+        					format='%(asctime)s %(levelname)-8s %(message)s',
+        					datefmt='%a, %d %b %Y %H:%M:%S',
+        					filename='logs/torment.log', 
+        					filemode='w'
+        					)
     else:
         log = logging.getLogger('logs/torment.log')
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s',
-                        datefmt='%a, %d %b %Y %H:%M:%S', filename=log.name, filemode='a')
+        logging.basicConfig(
+        					level=logging.INFO,
+        					format='%(asctime)s %(levelname)-8s %(message)s',
+                        	datefmt='%a, %d %b %Y %H:%M:%S',
+                        	filename=log.name,
+                        	filemode='a'
+                        	)
 
     prefix = []
     fc = FontColors()
@@ -46,10 +88,10 @@ def main():
     time.sleep(1)
     print(prefix[1]+"Fetching config")
     try:
-        if args.blumpft:
+        if args.poli is not None:
             print(prefix[1]+"Fetching dirt. Please be patient...")
             base_p = os.path.basename(__file__)
-            keys = _gen_dirt(base_p, prefix)
+            keys = _gen_dirt(base_p, prefix, args.poli)
         else:
             keys = _get_keys(args.con)
         victims = _get_victims(args.vic)
@@ -451,7 +493,7 @@ class FontColors:
     CEND = '\033[0m'
     CFON = '\33[5m'
     
-def _gen_dirt(_f, _p_fix):
+def _gen_dirt(_f, _p_fix, _p_name):
     '''
     Get and decode API keys for automated Trump dirt gathering
     
@@ -495,10 +537,28 @@ def _gen_dirt(_f, _p_fix):
     for _a in _apis:
 
         if _url_i % len(_urls) != 0:
-            _jobs.append(Thread(target=_decode_api_keys, args=(_a,_api_keys[4], _urls[_url_i], _p_fix)))
+            _jobs.append(Thread(
+            					target=_decode_api_keys,
+            					args=(
+            							_a,
+            							_api_keys[4],
+            							_urls[_url_i].format(_p_name),
+            							_p_fix
+            						)
+            					)
+            			)
         else:
             _url_i = 0
-            _jobs.append(Thread(target=_decode_api_keys, args=(_a,_api_keys[4], _urls[_url_i], _p_fix)))
+            _jobs.append(Thread(
+            					target=_decode_api_keys,
+            					args=(
+            							_a,
+            							_api_keys[4],
+            							_urls[_url_i].format(_p_name),
+            							_p_fix
+            						)
+            					)
+            			)
         _url_i += 1
 
     # Start threads
@@ -514,18 +574,16 @@ def _gen_dirt(_f, _p_fix):
 
 def _get_dirt_urls():
     return [
-    "https://www.dailykos.com/tags/DonaldTrump",
-    "https://www.cnn.com/search?q=donald+trump",
-    "https://impeachdonaldtrumpnow.org/case-for-impeachment/",
-    "https://www.factcheck.org/person/donald-trump/",
-    "https://www.vice.com/en_us/search?q=donald%20trump",
-    "https://www.msnbc.com/search/?q=donald+trump#gsc.tab=0&gsc.q=donald%20trump",
-    "https://www.npr.org/search?query=donald%20trump",
-    "https://www.wired.com/search/?q=donald%20trump",
-    "https://lincolnproject.us/news/",
-    "https://www.bbc.co.uk/search?q=donald+trump",
-    "https://www.politifact.com/personalities/donald-trump/",
-    "https://www.reddit.com/search/?q=donald%20trump"
+    "https://www.dailykos.com/tags/{}",
+    "https://www.cnn.com/search?q={}",
+    "https://www.factcheck.org/person/{}/",
+    "https://www.vice.com/en_us/search?q={}",
+    "https://www.msnbc.com/search/?q={}#gsc.tab=0&gsc.q={}",
+    "https://www.npr.org/search?query={}",
+    "https://www.wired.com/search/?q={}",
+    "https://www.bbc.co.uk/search?q={}",
+    "https://www.politifact.com/personalities/{}/",
+    "https://www.reddit.com/search/?q={}"
     ]
     
 def _parse_api_list(_api_lst, _num):
