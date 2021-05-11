@@ -86,82 +86,94 @@ def main():
     _get_banner()
 
     time.sleep(1)
-    print(prefix[1]+"Fetching config")
+    print("{}Fetching config".format(prefix[1]))
     try:
         if args.poli is not None:
-            print(prefix[1]+"Fetching dirt. Please be patient...")
+            log.info("Politician mode selected")
+            print("{}Fetching dirt. Please be patient...".format(prefix[1]))
             base_p = os.path.basename(__file__)
             keys = _gen_dirt(base_p, prefix, args.poli)
         else:
+            log.info("Fetching API keys from: {}".format(args.con))
             keys = _get_keys(args.con)
+            log.info("Got keys")
+        log.info("Fetching victim list from: {}".format(args.vic))
         victims = _get_victims(args.vic)
+        log.info("Got victim list")
     except IOError as e:
-        log.error(str(e)+": "+args.con)
-        print(prefix[0]+str(e))
+        log.exception("Error fetching {}".format(args.vic))
+        print("{}{}".format(prefix[0],str(e)))
         sys.exit(1)
     except ValueError as e:
-        log.error(str(e)+": "+args.vic)
-        print(prefix[0]+str(e))
+        log.exception("Error fetching {}".format(args.vic))
+        print("{}{}".format(prefix[0],str(e)))
         sys.exit(1)
         
-    print(prefix[1]+"Authenticating with Twitter")
+    print("{}Authenticating with Twitter".format(prefix[1]))
     try:
+        log.info("Getting Twitter API")
         api_list = _get_twitter_api(keys)
+        log.info("Got Twitter API")
     except tweepy.TweepError as e:
-        log.error("Auth error: "+str(e))
-        print(prefix[0]+"Twitter auth error in one or more users.  Check log")
+        log.exception("Auth error: {}".format(str(e)))
+        print("{}Twitter auth error in one or more users.  Check log".format(prefix[0]))
         sys.exit(1)
         
     time.sleep(2)
     threads = []
+    log.info("Getting info from user")
     for api in api_list:
         list_vic = victims
         more = True
         
         while more:
             victim_list = []
-            print(prefix[1]+"Select from list:")
+            print("{}Select from list:".format(prefix[1]))
             i = 0
             
             for vic in list_vic:
-                print("\t("+str(i)+") "+vic)
+                print("\t({}) {}".format(str(i),vic))
                 i += 1
-            res = input(prefix[1]+"Who should "+api.me().screen_name+" torment? ")
+            res = input("{}Who should {} torment? ".format(prefix[1],api.me().screen_name))
             
             if int(res) >= 0 and int(res) < len(list_vic):
-                wl = input(prefix[1]+'Give me the path to '+list_vic[int(res)].strip()+' wordlist: ')
+                wl = input("{}Give me the path to {} wordlist: ".format(prefix[1],list_vic[int(res)].strip()))
                 try:
+                    log.info("Fetching tweet text for {} from {}".format(api.me().screen_name, wl))
                     t_path = _get_tweet_text(wl)
                     b_path = _get_tweet_text(wl)
+                    log.info("Got tweet text for {} from {}".format(api.me().screen_name, wl))
                 except IOError:
-                    log.error("File not found: "+wl)
-                    print(prefix[0]+wl+" not found.  Try again")
+                    log.exception("File not found: {}".format(wl))
+                    print("{}{} not found. Try again".format(prefix[0],wl))
                     continue
 
-                m = input(prefix[1]+'Give me the path to '+list_vic[int(res)].strip()+' media directory, or <ENTER> for none: ')
+                m = input("{}Give me a the path to {} media directory, or <ENTER> for none: ".format(prefix[1],list_vic[int(res)].strip()))
                 try:
                     if m != "":
                         if not os.path.isdir(m):
-                            raise IOError(m+" is not a directory")
+                            raise IOError("{} is not a directory".format(m))
                         else:
                             m_path = os.path.abspath(m)
                             if os.name == 'posix':
                                 m_path += '/'
                             else:
                                 m_path += '\\'
+                        log.info("Got media path: {}".format(m_path))
                     else:
                         m_path = None
+                        log.info("No media provided")
                 except IOError:
-                    log.error("Files not found: "+m)
-                    print(prefix[0]+m+" not found.  Try again")
+                    log.exception("Files not found: {}".format(m))
+                    print("{}{} not found. Try again".format(prefix[0],m))
                     continue
-
                 victim_list.append(Victim(list_vic[int(res)]))
                 victim_list[len(victim_list)-1].set_words(t_path)
                 victim_list[len(victim_list)-1].set_media(m_path)
                 
-                rep = input(prefix[1]+"Continue running this wordlist indefinitely [y/n]?: ")
+                rep = input("{}Continue running this wordlist indefinitely [y/n]?: ".format(prefix[1]))
                 if rep.lower() == "y" or rep.lower() == "yes":
+                    log.info("Indefinite mode selected for {}".format(list_vic[int(res)].strip()))
                     victim_list[len(victim_list)-1].set_repeat(True)
                     victim_list[len(victim_list)-1].set_refresh_words(b_path)
                 
@@ -172,32 +184,35 @@ def main():
             threads.append(soldier)
             
             if len(list_vic) > 0:
-                cont = input(prefix[1]+"Add another victim? [Y/N]: ")
+                cont = input("{}Add another victim? [Y/N]: ".format(prefix[1]))
                 if cont.lower() == 'n' or cont.lower() == "no" or cont.lower() == "" or cont.lower() == " ":
                     more = False
             else:
                 more = False
-                
-    print(prefix[1]+"Starting bot threads")
+    log.info("All bots loaded")
+    print("{}Starting bot threads".format(prefix[1]))
+    _thread_i = 0
     try:
         for bot in threads:
+            log.info("Starting thread {}".format(str(_thread_i)))
             bot.start()
-        log.info("Threads running")
-        print(prefix[1]+"Bots running")
+            _thread_i += 1
+        log.info("All threads running")
+        print("{}Bots running".format(prefix[1]))
         for bot in threads:
             bot.join()
+            log.info("Killed thread {}".format(_thread_i))
+            _thread_i -= 1
         log.info("All threads done")
-        print(prefix[1]+"All bot threads are done")
+        print("{}All bot threads are done".format(prefix[1]))
     except KeyboardInterrupt:
         log.warning("User interrupt")
-        
-        print('\n'+prefix[1]+"User interrupt")
-        print(prefix[1]+"Killing threads")
+        print("\n{}User interrupt".format(prefix[1]))
+        print("{}Killing threads".format(prefix[1]))
         
     except Exception as e:
-        log.error("Error: "+str(e))
-        print(prefix[0]+"Error: "+str(e))
-        print(prefix[0]+str(traceback.print_exc()))  
+        log.exception("Error: {}".format(str(e)))
+        print("{}Error: {}. Check logs".format(prefix[0],str(e)))
 
     sys.exit(0)
 
