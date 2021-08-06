@@ -477,7 +477,7 @@ class Soldier(Thread):
                     print(self.prefix[1]+self.api.me().screen_name+" tormentor exited")
                     return
 
-            time.sleep(2)
+                time.sleep(5)
 
     def _get_twitter_api(self, api_keys):
         '''
