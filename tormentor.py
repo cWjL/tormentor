@@ -435,6 +435,11 @@ class Soldier(Thread):
                             print(self.prefix[0]+"[File too big] "+self.api.me().screen_name+" File: "+media_path+". Skipping this file and continuing")
                             self.log.error("[File too big] "+media_path+" too big. Skipping this file and continuing")
                             continue
+                        elif "Rate limit exceeded" in str(e):
+                            print(self.prefix[0]+self.api.me().screen_name+" [Rate limited] Taking a 15 second break")
+                            self.log.error(self.api.me().screen_name+" [Rate limited] Taking a 15 second break "+str(e))
+                            time.sleep(15)
+                            continue
                         else:
                             print(self.prefix[0]+self.api.me().screen_name+" [Undefined Tweepy Error] Check log for details. Aborting")
                             self.log.error("[Undefined Tweepy Error] "+str(e))
